@@ -1,3 +1,5 @@
+Author: Barrixar // Project URL: https://github.com/Barrixar/copilot-instructions.md // License: The Unlicense
+
 # Copilot Agent — Mandatory Quality Discipline
 
 **BLOCKING REQUIREMENT — READ THIS FILE IN FULL BEFORE EVERY TASK.**
