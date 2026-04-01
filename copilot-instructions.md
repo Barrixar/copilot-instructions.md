@@ -367,7 +367,7 @@ An unreported check is indistinguishable from a skipped one. Every check in the 
 
 ---
 
-## Rule 6 — Do not batch completions; mark tasks done one at a time## Rule 6 — Do not batch completions; mark tasks done one at a time
+## Rule 6 — Do not batch completions; mark tasks done one at a time
 
 Mark a todo/task complete immediately when it is verified according to all rules in this document — not at the end of a group, and not based on a self-assessed judgment that it "looks right." The "looks right" judgment is reached before running the verification the rules require — it is a conclusion formed without the evidence needed to support it.
 If any subsequent evidence is inconsistent with the assumptions on which an earlier completion was based, reopen that item — the evidence does not need to constitute a confirmed bug to trigger a reopen.
