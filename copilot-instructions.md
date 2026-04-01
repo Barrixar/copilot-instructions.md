@@ -73,6 +73,43 @@ The mandatory compliance reset is:
 
 ---
 
+## Rule 0.55 - Deliverable Lock And Task-Type Reset
+
+When the user changes the requested deliverable type, the agent must treat that as a full task-type reset, not as a continuation of the prior workflow.
+
+Examples of deliverable types include but are not limited to:
+- modify code
+- review code
+- explain code
+- summarize work already done
+- answer why the agent failed or drifted
+- modify an agent customization file
+
+The mandatory behavior is:
+1. Identify the requested deliverable type explicitly before doing anything else with the task.
+2. Restate the exact deliverable in one sentence using the user's nouns, not a paraphrase that broadens or narrows it.
+3. Treat the prior workflow as invalid unless it directly produces that deliverable. A prior code-fix or code-review loop must not continue when the user has switched to a summary, explanation, or customization-file request.
+4. Do not satisfy an adjacent deliverable instead of the requested one. For example: do not continue fixing code when asked to summarize prior work; do not continue summarizing work when asked to edit a file; do not continue reviewing code when asked why the agent drifted.
+5. Before sending the response, compare the actual response shape against the requested deliverable. If the user asked for a summary, the response must be a summary. If the user asked for root-cause analysis of agent behavior, the response must be that analysis. If the response shape does not match, discard it and restart from the task-start protocol.
+
+Failure class: the agent stays attached to the previous workflow and produces work for the old task type after the user has already switched to a new requested deliverable.
+
+---
+
+## Rule 0.56 - Repeated Ask Supremacy
+
+If the user says the agent did not listen, repeats a prior ask, quotes the exact ask again, or says "I repeat", then the repeated or quoted ask becomes the authoritative scope for the new task.
+
+The mandatory behavior is:
+1. Use the repeated or quoted ask as the controlling text, even if the immediately preceding assistant output was about something else.
+2. Do not blend the repeated ask with the previous assistant's mistaken direction.
+3. Do not answer the previous mistaken task more carefully. Answer the repeated ask instead.
+4. If the repeated ask is a meta request about the session, the agent, or the instructions file, do not return to product-code work before fulfilling that meta request.
+
+Failure class: the agent acknowledges the correction but continues doing the thing the user said it should stop doing.
+
+---
+
 ## Rule 0.6 - Customization File Tasks
 
 If the task is to create, explain, debug, or modify an agent customization file such as `copilot-instructions.md`, `AGENTS.md`, `*.instructions.md`, `*.prompt.md`, `*.agent.md`, or `SKILL.md`, then after the mandatory VCS diff the first subsequent file read must be the target customization file in full.
@@ -110,6 +147,35 @@ When the user asks to bring code to parity with a reference — a branch, a file
 4. **Re-check after layering back additions.** After adding task-specific logic on top of the parity baseline, re-read the result and confirm the additions did not reintroduce any divergence that was already resolved in the parity pass.
 
 *Failure class: parity task declared complete while the agent silently decided some divergences were acceptable, leaving the user with a false sense of alignment.*
+
+---
+
+## Rule 0.9 — Findings-driven fixes are new design changes
+
+When a task fixes a problem that was discovered during review, testing, runtime logs, or user feedback, treat that fix as a new design change - not as a small local patch to the prior design.
+
+The mandatory behavior is:
+1. Restate the original finding and name the exact code elements being changed to fix it.
+2. For each changed element, explicitly analyze all four directions before marking the fix complete:
+   - the original failure is actually removed
+   - the fix does not create a silent coverage loss, fail-open downgrade, swallowed signal, or other path by which the same class of bad state now escapes detection
+   - the fix does not create a new false positive, log spam loop, denial-of-service risk, or other overcorrection
+   - the fix does not create a new ownership, lifetime, reclamation, or concurrency hazard in any state transition it introduces
+3. If the fix retires, replaces, disables, downgrades, bypasses, or rebuilds any validation control, security control, hook, stub, pointer, handle, buffer, cache, allocation, or other shared state, explicitly name:
+   - who creates it
+   - every consumer that can still observe it
+   - the condition that retires it
+   - the point at which it is reclaimed or freed
+   - whether any in-flight caller can still reach the old generation
+   The old state must not be freed, overwritten, or orphaned until the concurrent-reader risk has been addressed in code or ruled out by reading.
+4. If a control previously distinguished expected from unsafe, unauthorized, invalid, or tampered state and the fix changes what happens when that control fails, the new failure path must be explicitly classified as one of:
+   - explicit security or integrity failure signal
+   - compensated alternate validation or security control whose implementation was read in this task
+   - user-approved gap
+   "Skip the verdict on failure" is a fail-open downgrade unless a compensating control is named and verified in code.
+5. Any prior clean conclusion for the touched region is invalid once the fix is written. The touched region must be re-reviewed from the new code state through the full post-edit read and the full regression gate.
+
+*Failure class: a fix for one finding introduces the opposite failure mode, a fail-open gap, a false positive, or a lifecycle bug because it was reviewed as a narrow patch instead of as a new design change.*
 
 ---
 
@@ -232,6 +298,7 @@ Neither layer substitutes for the other. Both must run and both must be reported
 The steps below must each be executed in full and reported separately. Each step catches a class of failure the others miss — running them together as a single combined glance is not the same as running each independently to its own stopping condition. Do not abbreviate or merge steps. Where a step contains sub-items, every sub-item is individually mandatory — omitting any sub-item is omitting the step. No step is less important than another — do not rush or deprioritize any of them:
 
 1. **Active defect analysis:** Deeply scrutinize every change made during the current task — its design decisions, the conclusions reached during implementation, and the resulting code. Actively search for new bugs, edge cases, mistakes, and overlooked failure scenarios. This is not a confirmation that the code "looks right" — it is a deliberate, targeted search for ways in which it could be wrong, subtle or otherwise. For each change, ask: what inputs, states, timing, or sequences could cause this to fail? What assumptions does this code make that have not been verified by reading? Are there new scenarios in which callers or consumers of the changed code would need to be updated (Rule 4)? The answers to these questions must be explicitly written in the report for each change — thinking through them internally without writing the analysis is indistinguishable from skipping the step. Enumerate every concern found by name. If none are found, state so explicitly — the absence of findings must be the result of having searched, not of having glanced.
+   Also explicitly search for symmetry and lifecycle failures in fixes: a fix that stops a false positive must not create a fail-open gap or false negative; a fix that stops a missed failure must not create spam, denial-of-service risk, or broader breakage; a fix that retires or replaces a validation control, security control, hook, stub, pointer, buffer, or cached result must not introduce a concurrent reader, reclamation, or generation-tracking bug. These checks must be named in the report when applicable.
 
 2. **Goal check (Rule 8):** Re-examine every change made during the current task against all four Rule 8 confirmations — not only the last change, and not only one of the four confirmations. Each change may be individually correct yet combine with another to produce a conflict that is only visible at the task level. This re-examination is the only pass that sees the aggregate. Confirm the change achieves its goal in the optimal, most correct, most secure, and most performant way. The four confirmations mandated by Rule 8 must be explicitly written out in this step's report; citing Rule 8 or claiming it was already checked without reproducing its required written statements is a protocol violation. Performance matters and must be evaluated explicitly, not assumed acceptable.
 
@@ -300,7 +367,7 @@ An unreported check is indistinguishable from a skipped one. Every check in the 
 
 ---
 
-## Rule 6 — Do not batch completions; mark tasks done one at a time
+## Rule 6 — Do not batch completions; mark tasks done one at a time## Rule 6 — Do not batch completions; mark tasks done one at a time
 
 Mark a todo/task complete immediately when it is verified according to all rules in this document — not at the end of a group, and not based on a self-assessed judgment that it "looks right." The "looks right" judgment is reached before running the verification the rules require — it is a conclusion formed without the evidence needed to support it.
 If any subsequent evidence is inconsistent with the assumptions on which an earlier completion was based, reopen that item — the evidence does not need to constitute a confirmed bug to trigger a reopen.
