@@ -363,6 +363,23 @@ The stopping condition is: every consumer of every affected shared data structur
 
 *Failure class: change locally correct and all direct callers handle it, but shared state now contains data that violates assumptions held by non-caller consumers — parent-chain walks see replacement data, remove and restore paths operate on unexpected entries, reapply paths miss consumers not tracked in the call graph, or entities structurally omitted from processing are still affected through external-system resolution mechanisms the code does not track.*
 
+### Rule 4 second addendum - Gates, readiness boundaries, and mirrored state
+
+Rules 2 and 4 require tracing callers and consumers. This addendum closes a different failure mode: an agent changes a generic gate, timeout, or readiness flag using a nearby proxy signal instead of the system's real completion state, or updates only one copy of mirrored state while another copy continues enforcing the old behavior.
+
+When a change modifies logic that permits, blocks, delays, times out, or otherwise gates work based on lifecycle state - including but not limited to startup state, initialization stage, retry state, disconnect state, readiness flags, delivery gates, stop flags, and session timers - the following steps are mandatory:
+
+1. **Identify the real ready boundary.** Read the code that marks the feature or session truly ready. Do not substitute a proxy such as "packet parsed", "response queued", "message handled", or any other nearby milestone unless the system itself uses that milestone as the authoritative boundary. The stopping condition is: the exact field, callback, or state transition that the rest of the system treats as "ready" has been located and read in code.
+2. **Enumerate every setup and control item that must pass before readiness.** Name every message, callback, retry, acknowledgement, initialization step, or other control item that must still pass before the real ready boundary is reached, and every one that must be blocked after it. Read the senders and consumers of each one. A generic gate change is not complete until this before-ready allowed set has been derived from code, not inferred from names or comments.
+3. **Name every mirror of the gated state.** Read every copy of the state that participates in the gate - outer object fields, listener or helper fields, cached flags, timers, remote mirrors, and any value used only for comparison. Name who writes each copy, who resets it, and who consumes it. If two copies can diverge, the change must either update them together or explicitly prove why they cannot diverge in the affected lifecycle.
+4. **Re-read the full lifecycle in code.** Follow the change through every stage it can affect: fresh session before setup completes, setup in progress, real ready state, disconnect or reset, same-process retry or reconnect if applicable, and shutdown or forced-stop paths if applicable. A change correct in the steady state but wrong in any earlier or later stage is incorrect.
+5. **Bound every weaker pre-ready stage explicitly.** If a pre-ready stage uses a weaker gate or longer timeout than the fully ready stage, justify in writing why it does not create unexpectedly permissive behavior. "Avoid blocking valid work" is not enough by itself - the weaker stage must still be bounded, and the bound must be traced to the code paths that can occur before readiness is proven.
+6. **State the before-ready allow and block sets explicitly.** After the change, answer both questions in the response: "What is now allowed through before readiness?" and "What is now blocked before readiness?" If either answer is based on assumption instead of named code paths, the review is incomplete.
+
+**A lifecycle gate, readiness flag, or timeout change must not be marked complete until steps 1-6 above have been executed. Using a proxy boundary, missing setup traffic, or updating only one mirror of shared state is a protocol violation.**
+
+*Failure class: agent tightens or relaxes a generic gate around the wrong lifecycle boundary, blocks required setup traffic, leaves mirrored state out of sync, or gives a not-yet-ready stage the timeout or privilege of the fully ready state.*
+
 ---
 
 ## Rule 5 — Post-edit verification is mandatory, not optional
