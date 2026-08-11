@@ -434,6 +434,75 @@ Specific obligations:
 
 ---
 
+## Rule 2A — Design-phase change safeguards
+
+Pre-write checks: each targets a failure class invisible in the new code that appears only when the change meets the surrounding system. Applied at design time they prevent the failure; applied after the fact they only detect it.
+
+### 2A.1 — Retry, fallback, and recovery paths must not be removed, made one-shot, or weakened without replacing their failure tolerance
+
+When a change removes a retry, fallback, recovery, or deferred-execution path, converts it into a one-shot path, or weakens its trigger until it effectively never fires, the replacement must be analyzed for every failure mode before the change is written:
+1. Enumerate every reason the original path could run more than once (transient resource unavailability, ordering races, initialization timing, external state not yet ready), and state what happens if that condition is still true when the replacement runs its single attempt. An empty enumeration is valid only if the original could never have needed a second attempt — state that justification with the code evidence that supports it. If any condition leaves the feature permanently disabled, with no self-healing path and no explicit signal that it is disabled, the change is a silent coverage-loss regression.
+2. The replacement must be one of: a path that cannot fail into a permanent disable; a bounded recovery path gated on the legitimate transient condition, where the gate cannot be re-established by the actor that made the removal necessary; or a permanent-disable state explicitly signaled and accepted by the user before the change is written. If the recovery gate is a flag, verify that clearing the flag cannot re-arm the removed failure path in a way that reintroduces it.
+
+**A retry, fallback, or recovery path must not be removed, made one-shot, or weakened until it effectively never fires unless the analysis above has been written and the replacement is confirmed not to produce a silent permanent disable.**
+
+*Failure class: a recovery path is removed for good reasons; the one-shot replacement fails once on a transient condition; the feature is permanently disabled with no signal. The removal was correct, the replacement was not.*
+
+### 2A.2 — Readiness and completion signals must be published only after the values they attest to
+
+Any value other code treats as a readiness, completion, validity, or availability indicator — a flag, a non-null handle, a published pointer, a done marker — must be the final write in its publication sequence. Before writing code that publishes such a signal:
+1. Enumerate every value the signal implies is ready or final, and every reader of the signal or of those values, directly or through callees — including readers that do not branch on the signal but read the values on a fixed schedule or timing.
+2. Write the signal only after every value it implies is fully written, so any reader that observes the signal or reads the values it attests to observes only post-publication state. Check every concurrent observer: any thread or callback that can read the signal between its write and the completion of the writes that must precede it is a race — close the window with ordering visible to all observers, or name the observer and prove it cannot observe the intermediate state.
+
+This applies to new code, not only to fixes: a signal written before its data is complete is a defect even if no current reader exercises the window.
+
+**A readiness or completion signal must not be written before the values it attests to. Writing the signal first is a protocol violation.**
+
+*Failure class: a reader observes the ready signal, reads the still-default values it implies are final, and produces a verdict on uninitialized data. Correct in the author's intended order, wrong under the actual publication order.*
+
+### 2A.3 — Fixed-size bounds must be enforced by the toolchain, not estimated by hand
+
+When a change creates or grows an object, buffer, or data set on a fixed-size region — a single page, a fixed-capacity array, a bounded allocation, a size-capped container — the new size must be verified against the bound with a mechanism that fails loudly:
+1. Identify every fixed-size bound the change could violate (region size, array capacity, container cap, page count, buffer length), and for each add enforcement that fails at build or load time when violated: a compile-time assertion on the object size, a static capacity check, a build-time size verification, or an explicit guard at the allocation point.
+2. The enforcement must reference the same bound constant the allocation or container uses, not a hardcoded duplicate — if the allocation or container hardcodes the bound as a literal, change it to reference the same named constant the enforcement uses. Hand calculation of the new size is not verification.
+3. If the toolchain cannot enforce the bound, state the bound explicitly and add a runtime check that fails loudly rather than overflowing silently. Confirm the bound against the actual toolchain output — the compiled size, the allocation result — not against an estimate.
+
+**A change that creates or grows anything placed on a fixed-size region must not be marked complete until the bound is enforced by a failing-loud mechanism and confirmed against the actual size.**
+
+*Failure class: an object on a fixed-size region grows past the bound; the region cannot grow; the overflow corrupts adjacent memory or faults at a distance from the change that caused it.*
+
+### 2A.4 — A mechanism disabled for reliability must not be re-enabled without its compensating control
+
+When a change re-enables, re-activates, or re-introduces a mechanism previously disabled or downgraded for reliability, stability, false-positive, or user-facing failure reasons, the change must include the compensating control that addresses the original reason, or the original failure mode must be explicitly bounded:
+1. Find the record of why the mechanism was disabled — a comment, a changelog, history; the reason is the specification for what the re-enable must handle. If no record exists, treat the disable as deliberate (see Rule 9) and still require the compensating control.
+2. Re-enable only if the compensating control is present in the same change, or the original failure mode is explicitly bounded in a way that cannot regress. If the compensating control is deferred to a later change, the re-enable must not land without it — state the dependency and ship them together, or do not ship the re-enable. Do not re-enable to test whether the problem still exists; a mechanism disabled for a recorded reason stays disabled until the reason is addressed in the same change.
+
+**A mechanism disabled for a reliability reason — recorded or treated as deliberate — must not be re-enabled without the compensating control for that reason, in the same change.**
+
+*Failure class: a mechanism disabled because it produced false failures for legitimate users is re-enabled before the false-failure source is fixed; the original user-facing failure returns and the re-enable must be reverted.*
+
+### 2A.5 — Multi-part integrations must be delivered complete or explicitly inert
+
+When a change is part of a multi-part integration — a producer and its consumer, a generator and the use of its generated output, a configuration and the build or load step that consumes it, a prerequisite and the mechanism that activates it — each part must be functional in every delivered configuration or explicitly marked inert in the configurations where it is not:
+1. Identify every consumer of the change's output that is not part of the same change, and for each deferred consumer state in the delivery report to the user that the change is inert until that consumer lands; do not mark the change complete on its own.
+2. A prerequisite delivered without its consumer must not be described as active — its dependency must be explicit. If the delivered state does nothing (dead configuration, unused generated output, unconnected wiring), say so; an inert change presented as complete is a false delivery.
+
+**A part of a multi-part integration must not be marked complete while its consumer is missing. The inertness and the dependency must be stated at delivery.**
+
+*Failure class: a prerequisite and its consumer are shipped in separate changes; the prerequisite is inert and reported complete; the consumer lands later and the inertness is forgotten — an integration assumed active when it is not.*
+
+### 2A.6 — A mechanism's claimed property must be verified to hold before the mechanism is presented as providing it
+
+When a mechanism's stated purpose depends on a property that can be verified by reading or measurement — a signature binding the content it claims to cover, a hash covering specific bytes, a check being reachable on the paths it guards — the property must be verified to hold before the mechanism is relied on or presented as providing it:
+1. Identify the property the mechanism claims — what exactly does it bind, cover, guard, or attest to — and verify it by reading the mechanism's inputs and the data it operates on, not by assuming the claim holds. Verify against the full input domain the mechanism will face, including attacker-controlled inputs, not only the current or benign ones. If the property can be measured (size, reachability, byte coverage, binding strength), measure it with the toolchain or by direct inspection.
+2. If the property is unachievable or only partially holds, do not implement-and-document the mechanism as if it provided the full property — surface the finding to the user and do not present the mechanism as effective for that purpose. If the user directs that the mechanism must still land for other reasons, state explicitly which property it provides and which it does not.
+
+**A mechanism must not be presented as providing a property that has not been verified to hold. Implementing it and documenting the gap in a report is not a substitute for surfacing the finding before the change is complete.**
+
+*Failure class: a mechanism is built whose core property — the very property that gives it purpose — is empirically void or partial; the mechanism is delivered and reported as if it worked, so later verification builds on a false premise. The gap was discoverable by reading or measurement before the mechanism was written.*
+
+---
+
 ## Rule 3 — Enumerate all existing pattern instances before adding a new one
 
 Whenever applying a pattern — whether it is the first instance or not — calling it the "first" is a judgment made before grepping; grepping is the only step that can confirm it:
@@ -526,6 +595,8 @@ A grep that confirms the changed string is present is **not** a substitute for r
 
 If the workspace has available build, lint, or test tools whose invocation is known, run them after changes to verify no new errors were introduced. A passing build does not substitute for the read-and-verify rules above, but a failing build is a finding that must be resolved before marking the task complete.
 
+A build, lint, or analysis tool can be cited as verification only if it demonstrably parsed or compiled the unit under change. If the tool reports configuration, include-path, architecture, or environment errors that prevent it from loading that unit, it did not analyze the change — any clean result it reports is void, and the change must be stated as unverified by that tool. A unit that is excluded from the run — by platform, configuration, filter, or unreachable path — is likewise unverified by that run; a build in a configuration that does not compile the changed unit cannot certify it. A tool that cannot load the code cannot certify the code. When reporting tool results, state whether the tool actually parsed the changed unit; a unit that was not parsed, with no reported errors, is an unverified unit, not a verified one.
+
 ### Rule 5 post-edit checklist additions — high-risk patterns to explicitly check on every re-read
 
 When re-reading any modified function or block under step 1, the following patterns must be explicitly checked in addition to general correctness. These are not separate steps — they are named items within the step 1 re-read that must each be looked for and either confirmed absent or addressed:
@@ -574,6 +645,7 @@ The steps below must each be executed in full and reported separately. Each step
    - **Toolchain structural constraint conflict:** If any call was added to a function — including temporary diagnostic or logging calls — confirm the function's body does not use any low-level fault-handling mechanism that the language or toolchain prohibits from coexisting with constructs the new call introduces. Temporary calls are not exempt: a diagnostic call that causes a build-time structural conflict requires the same resolution as a permanent one, and discovering it after writing forces a disruptive refactor that introduces its own scope-correctness risk. State what was checked.
    - **Re-entrancy in error and logging paths:** If any new call was added, or any new function was inserted into the call graph of an error, assertion, or logging path, confirm the new code's transitive callees do not reach back through the same logging or error-reporting entry point that called it. This check activates for both new call sites and for new function insertions — a new function placed between an existing caller and the logger creates a re-entrancy risk without adding a named call site. A re-entrant path creates an unbounded stack whenever the logger fires under any error condition. State what was traced and whether any path back to the logger was found.
    - **Unfinalized resource handle (allocate/finalize lifecycle gap):** For every resource-creating API call added or modified — any function named `Create*`, `Open*`, `Generate*`, `Allocate*` that returns a handle through an output parameter — confirm by reading code that a matching finalization call (`*Finalize*`, `*Initialize*`, `*Commit*`, `*Ready*`, `*Complete*`) on the returned handle executes before the handle is passed to any usage function. A non-null handle that was never finalized passes null checks but is internally unusable; every call in the chain succeeds individually, so static reasoning cannot detect the gap. Grep for each creation call in the modified function, then grep for the corresponding finalize — if none found, read the creation function's documentation. See "Stateful API lifecycle" under Rule 2 and item F in the Rule 5 post-edit checklist.
+   - **Design-phase change safeguards (Rule 2A):** check every change against the Rule 2A failure classes — recovery-path removal or weakening without replacement analysis, readiness-signal publication order, fixed-size bound creation or growth without enforcement, re-enabling a disabled mechanism without its compensating control, inert multi-part integration presented as complete, and a mechanism presented as providing a property that was never verified to hold. Each must be confirmed absent or explicitly addressed, and a tool result may not be cited as verification unless the tool parsed the unit under change (Rule 5).
 
 2. **Goal check (Rule 8):** Re-examine every change made during the current task against all four Rule 8 confirmations — not only the last change, and not only one of the four confirmations. Each change may be individually correct yet combine with another to produce a conflict that is only visible at the task level. This re-examination is the only pass that sees the aggregate. Confirm the change achieves its goal in the optimal, most correct, most secure, and most performant way. The four confirmations mandated by Rule 8 must be explicitly written out in this step's report; citing Rule 8 or claiming it was already checked without reproducing its required written statements is a protocol violation. Performance matters and must be evaluated explicitly, not assumed acceptable.
 
