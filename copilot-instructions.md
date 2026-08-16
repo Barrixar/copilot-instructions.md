@@ -501,6 +501,60 @@ When a mechanism's stated purpose depends on a property that can be verified by 
 
 *Failure class: a mechanism is built whose core property — the very property that gives it purpose — is empirically void or partial; the mechanism is delivered and reported as if it worked, so later verification builds on a false premise. The gap was discoverable by reading or measurement before the mechanism was written.*
 
+### 2A.7 — State-space enumeration before a mechanism is complete
+
+When a change creates or modifies any mechanism that distinguishes valid from invalid, expected from degraded, or safe from unsafe state — a check, a validation, a gate, a parser, a decoder, a fallback, a cache, a protocol handler, a verification, or any equivalent — the mechanism must not be marked complete until every state it will face has an explicit verdict:
+
+1. Enumerate the state classes the mechanism can encounter — the classes below are a required minimum, not exhaustive: nominal; stale (input produced before a schema, format, layout, or contract change); wrong-schema (structurally valid but from a different version); poisoned (values corrupted, substituted, or transformed by an untrusted party); missing (absent inputs, resources, features, or environment capabilities); relocated (addresses, handles, indices, or resources at unexpected positions, including positions outside the expected range in either direction); reordered (inputs or events arriving in an unexpected order); and environmental (legitimate platform, deployment, or configuration variations).
+2. For each enumerated state, determine the failure signal the mechanism produces: a loud failure, a silent pass, a skip, a default value, a no-op, a retry, or a termination.
+3. Classify each state as tamper (only an untrusted party can produce it — must fail closed with a clear signal), transient (a legitimate temporary condition — must degrade bounded and recover on retry), or environmental-unavailable (a legitimate permanent condition — must degrade bounded with an explicit signal).
+4. Name every silent state — soft-pass, skip, default, no-op — and justify its silence in the response. A silent state is the highest-risk verdict because it is indistinguishable from a pass; a mechanism whose silent states were not enumerated is not verified.
+
+**A mechanism must not be marked complete until every enumerated state has an explicit verdict and every silent state has been named and justified.**
+
+The enumeration itself must be written out in full in the response. A state class omitted from the enumeration is an unverified state; a mechanism whose enumeration omits any state class it will face must not be marked complete. A class asserted to be impossible — because relocated, stale, poisoned, or missing inputs "cannot occur" — must be argued impossible from the code, not asserted, with the reason stated in the response.
+
+*Failure class: a mechanism verified only at its nominal state passes review while its degraded, poisoned, relocated, or stale states produce silent passes, false rejections, or no-ops that appear only when the state actually occurs — the exact states an adversarial or production environment is most likely to produce.*
+
+### 2A.8 — Legitimate-failure enumeration before failure semantics
+
+Before deciding that a mechanism's failure means "attack" and wiring the failure to a kill, terminate, or reject path, enumerate every legitimate way the underlying component can fail. The kill path must be reserved for states that only an untrusted party can produce. If any legitimate condition — a platform difference, a missing optional feature, a transient resource condition, a deployment variant, a version mismatch, a configuration difference — can reach the kill path, the failure semantics are wrong: the mechanism conflates environmental unavailability with tampering.
+
+For each failure path of the mechanism, name the legitimate conditions that can produce it. If any exist, the path must degrade (bounded-inert with an explicit signal) rather than terminate, unless a compensating control verified by reading bounds the risk. Conversely, a path reachable only by an untrusted party must fail closed, not degrade.
+
+**A failure path must not be wired to a kill or reject verdict until every legitimate condition that can reach it has been enumerated and ruled out.**
+
+An enumeration that names no legitimate conditions is valid only when the absence of legitimate failure conditions is justified from the code, not asserted. A compensating control cited as bounding a kill path must be confirmed, by the reading that the body above requires, to cover the specific exposure it claims to bound, not merely named; state in the response how the control covers that exposure. For security-relevant mechanisms, also construct the concrete legitimate and malicious examples required by Rule 5.2 step 3.
+
+*Failure class: a mechanism is designed for the attacker's failure mode and ships a kill for a legitimate user's environment; an environmental condition becomes a user-facing crash, eroding trust in the mechanism and creating pressure to weaken or disable it.*
+
+### 2A.9 — Silent-failure sibling audit
+
+When a change hardens one failure mode of a mechanism — adds a check, a validation, a probe, a guard, a self-test, or a verification — enumerate the other failure modes of the same mechanism and verify each one's failure signal. Hardening the loud failure mode while a sibling mode still fails silently is net-zero hardening: a mechanism is only as strong as its quietest failure mode.
+
+In particular, when a check is added at one stage of a multi-stage operation, verify the checks at the other stages. A stage whose failure produces a soft-pass, a skip, a default value, or a no-op is the silent sibling that defeats the hardening: the mechanism reports a pass because the sibling stage swallowed the failure, not because the operation succeeded. Each sibling must be named and its failure signal verified in the response.
+
+**A hardening change must not be marked complete until every sibling failure mode of the same mechanism has been named and its failure signal verified.**
+
+The sibling set must be derived from an explicit enumeration of every stage of the operation and every alternate path that can produce the mechanism's verdict — not from the failure modes that first come to mind; write that enumeration out in full in the response. A sibling asserted to be already verified elsewhere must be re-read at its actual site in this task before it counts as verified. This is distinct from 2A.7: 2A.7 requires a verdict for every state the mechanism will face; this rule requires that hardening one mode not leave another mode with a weaker failure signal.
+
+*Failure class: a fix hardens the stage whose failure is loud (crash, exception, visible error) while the stage whose failure is silent (soft-pass, skip, default) is left unhardened, so the mechanism still fails open on the quiet path — and the quiet path is the one an attacker or a broken input reaches first.*
+
+### 2A.10 — Obligation audit for redesigns
+
+When a change redesigns or rewrites a function, mechanism, or component — a rewrite, restructure, replacement of one approach with another, or a change that moves state between scopes — the new design creates obligations the old design did not have, and a prior analysis of the old design is invalid for the new one. Before the redesign is marked complete:
+
+1. Resource lifecycle: if the new design creates, opens, allocates, or acquires any resource, confirm every exit path — including exception and fault paths — releases it. A redesign that moves a resource from persistent scope to per-operation scope must release the resource on every path; the fault path is the one most likely to be missed, and a release performed only on the success path leaks per operation.
+2. State publication: if the new design publishes any readiness, availability, or completion signal, confirm it is written only after the values it attests to (see 2A.2).
+3. Scope and lifetime: if the new design introduces per-operation or stack-local state where persistent state previously existed, or vice versa, confirm every consumer sees the intended generation and that no consumer of the old state remains.
+4. Re-derive the analysis from the new code, not from the design intent. A conclusion reached about the old design does not transfer; the redesign must be re-audited as if it were new work.
+
+**A redesign must not be marked complete until the new design's obligations — most notably resource release on every path, including the fault path — have been audited from the new code.**
+
+A fix that changes the design is a redesign for this purpose (see Rule 0.9). The resource-release obligation here is the design-time counterpart of the post-edit unfinalized-handle check (Rule 5 item F); both must pass.
+
+*Failure class: a rewrite is reviewed for the defect it replaced while its own new obligations are never audited, so the rewrite ships a leak, a dangling state, or a wrong-generation read that the old design did not have.*
+
 ---
 
 ## Rule 3 — Enumerate all existing pattern instances before adding a new one
@@ -514,6 +568,18 @@ Knowledge of the codebase from prior reads is a snapshot — it does not reflect
 **A new pattern instance must not be written until steps 1-3 above have been completed. Adding the instance first and grepping afterward is a protocol violation.**
 
 *Failure class: new instance added correctly, but sibling locations (destructor, reset function, corruption handler) missed.*
+
+### Rule 3 addendum — Principle-consistency sweep
+
+When the agent establishes, cites, or relies on a defensive principle in any analysis or fix — a principle such as "no writable cross-operation state on a decision path," "self-test a derived value before publishing it," "no hookable API on a security path," "read the authoritative source rather than a transformable one," "verify an output before it is used," or any equivalent — the agent must sweep the entire changeset and search for every other location where that principle applies, including locations the agent itself authored or modified in the same task. A principle applied in one location and violated in another within the same changeset is a defect, not an acceptable inconsistency.
+
+The sweep must be performed by searching, not by memory: the locations where the principle was not applied are invisible from the location where it was. Search terms must be derived from the principle's subject — the resource, the API, the value, the state — and applied across the whole scope, not just the file being edited.
+
+**A fix that establishes a defensive principle must not be marked complete until every location in the changeset where that principle applies has been found and confirmed to apply it.**
+
+The sweep applies whether the principle was named or applied implicitly, and it covers every location the change makes newly relevant — including pre-existing code the change now depends on, not only locations the agent modified in this task.
+
+*Failure class: a fix demonstrates a principle at one site while sibling sites in the same changeset violate it, so the class of defect the fix addresses survives at the sites the fix did not reach.*
 
 ---
 
@@ -617,6 +683,8 @@ When re-reading any modified function or block under step 1, the following patte
 
 **F. Unfinalized resource handles — allocate/finalize lifecycle gap.** After any change that adds a call to a resource-creating API — any function returning a handle, key, context, session, or opaque pointer through an output parameter whose name matches `Create*`, `Open*`, `Generate*`, `Allocate*`, or a similar creation verb — grep the modified function body for the creation call and confirm that a matching finalization call (`*Finalize*`, `*Initialize*`, `*Commit*`, `*Ready*`, `*Complete*`) appears between it and every usage site (sign, encrypt, export, query, send, etc.). The check: (a) locate every resource-creating call in the changed code, (b) for each one, grep the same function body for a matching finalize/commit call on the returned handle that executes before the handle is passed to any usage function, (c) if none is found, read the creation function's documentation (not training memory) to determine whether finalization is required — the agent's training data cannot distinguish `BCryptGenerateKeyPair` (needs finalize) from `BCryptCreateHash` (does not). This is a mechanical grep-and-verify check, not a judgment call — do not assume a creation call is ready-to-use. A non-null handle passes guard logic but is internally unusable until finalized; every call in the unfinalized chain succeeds individually at the API level, so static analysis cannot detect the gap. See also: "Stateful API lifecycle" under Rule 2.
 
+**G. Load-bearing non-obvious properties remain documented (regression guard).** After any change, identify the load-bearing non-obvious properties in the changed blocks and confirm each is recorded in a comment at the site where a future change could silently break it (see Rule 11 comment-as-regression-guard for the property classes and the guard rule).
+
 ---
 
 ## Rule 5.1 — Proactive regression gate: mandatory at every task completion
@@ -638,14 +706,15 @@ The steps below must each be executed in full and reported separately. Each step
 1. **Active defect analysis:** Deeply scrutinize every change made during the current task — its design decisions, the conclusions reached during implementation, and the resulting code. Actively search for new bugs, edge cases, mistakes, and overlooked failure scenarios. This is not a confirmation that the code "looks right" — it is a deliberate, targeted search for ways in which it could be wrong, subtle or otherwise. For each change, ask: what inputs, states, timing, or sequences could cause this to fail? What assumptions does this code make that have not been verified by reading? Are there new scenarios in which callers or consumers of the changed code would need to be updated (Rule 4)? Does this change cause different data to flow into any shared data structure — and if so, have all consumers of that structure been identified and confirmed compatible with the new contents (Rule 4 addendum)? The answers to these questions must be explicitly written in the report for each change — thinking through them internally without writing the analysis is indistinguishable from skipping the step. For the shared-data-structure question: the answer must include the trace evidence from Rule 4 addendum step 1 — naming the writes and data-flow outputs that were examined and their destinations. An answer of "no shared structures" without this trace is an untested assumption and does not satisfy the step. Enumerate every concern found by name. If none are found, state so explicitly — the absence of findings must be the result of having searched, not of having glanced.
    Also explicitly search for symmetry and lifecycle failures in fixes: a fix that stops a false positive must not create a fail-open gap or false negative; a fix that stops a missed failure must not create spam, denial-of-service risk, or broader breakage; a fix that retires or replaces a validation control, security control, hook, stub, pointer, buffer, or cached result must not introduce a concurrent reader, reclamation, or generation-tracking bug. These checks must be named in the report when applicable.
    Also explicitly question every exclusion in new or changed code — and in pre-existing code whose correctness depends on assumptions the current task's changes have invalidated. An exclusion is any mechanism — explicit or structural — by which entities that could be affected by the operation's downstream results are not processed (see Rule 4 addendum step 5 for the full definition, including structural exclusions such as iteration scope). For each exclusion found, ask and answer in the report: are the excluded entities truly unaffected by the full effect chain the code participates in, including through external-system resolution mechanisms (parent-child inheritance, fallback chains, virtual dispatch) that the code's own tracking structures do not cover? An exclusion condition that was validated only against the code's explicit tracking — without first identifying the external system's traversal mechanisms and tracing whether they deliver the operation's effects to the excluded entities — is a potential silent coverage loss. Name each exclusion examined (explicit and structural), the external-system mechanisms checked, and state the conclusion.
-   Also explicitly check for the following five failure classes in every change, regardless of whether the change appears related to them:
+   Also confirm the change was verified beyond its nominal state (Rule 8 addendum), and that any residual is either fixed or justified with a concrete reason and compensating control (Rule 15).
+   Also explicitly check for the following seven failure classes in every change, regardless of whether the change appears related to them:
    - **Transitive call-graph cycle (back-edge):** If any function's call set was widened — whether by an explicitly authored new call site, by modifying a function's body in a way that makes it reach new callees through existing helpers, or by inlining a helper into its caller — confirm that the full transitive call graph of every newly reachable function was traced and no path back to the originating function was found. A cycle creates an unbounded mutual recursion that is invisible from reading either function's body alone and from reading only the function that was the explicit target of the change. The check must cover call-set widening from all causes, not only explicitly authored call sites. State what was traced and the result.
    - **Flag write-order with indirect branching:** If any state flag, readiness signal, or commit indicator was moved, added, or reordered relative to computations, confirm that every computation whose behavior changes based on that flag was identified — including computations in callees several frames below the call site that branch on the flag internally. A flag-dependent computation in a distant callee is invisible from reading the call site or the flag's direct readers. State which callees were traced and what flag state they observe.
    - **Proof or snapshot field populated from a re-read of writable shared memory:** If any code populates a proof structure, integrity snapshot, provenance record, or tamper-evident record, confirm each field was captured from the computing function's direct return value or output parameter — not from a re-read of the location the function wrote its output to. A re-read creates a window during which an attacker with write access to that location can substitute a tampered value. State which fields were traced and their source.
    - **Toolchain structural constraint conflict:** If any call was added to a function — including temporary diagnostic or logging calls — confirm the function's body does not use any low-level fault-handling mechanism that the language or toolchain prohibits from coexisting with constructs the new call introduces. Temporary calls are not exempt: a diagnostic call that causes a build-time structural conflict requires the same resolution as a permanent one, and discovering it after writing forces a disruptive refactor that introduces its own scope-correctness risk. State what was checked.
    - **Re-entrancy in error and logging paths:** If any new call was added, or any new function was inserted into the call graph of an error, assertion, or logging path, confirm the new code's transitive callees do not reach back through the same logging or error-reporting entry point that called it. This check activates for both new call sites and for new function insertions — a new function placed between an existing caller and the logger creates a re-entrancy risk without adding a named call site. A re-entrant path creates an unbounded stack whenever the logger fires under any error condition. State what was traced and whether any path back to the logger was found.
    - **Unfinalized resource handle (allocate/finalize lifecycle gap):** For every resource-creating API call added or modified — any function named `Create*`, `Open*`, `Generate*`, `Allocate*` that returns a handle through an output parameter — confirm by reading code that a matching finalization call (`*Finalize*`, `*Initialize*`, `*Commit*`, `*Ready*`, `*Complete*`) on the returned handle executes before the handle is passed to any usage function. A non-null handle that was never finalized passes null checks but is internally unusable; every call in the chain succeeds individually, so static reasoning cannot detect the gap. Grep for each creation call in the modified function, then grep for the corresponding finalize — if none found, read the creation function's documentation. See "Stateful API lifecycle" under Rule 2 and item F in the Rule 5 post-edit checklist.
-   - **Design-phase change safeguards (Rule 2A):** check every change against the Rule 2A failure classes — recovery-path removal or weakening without replacement analysis, readiness-signal publication order, fixed-size bound creation or growth without enforcement, re-enabling a disabled mechanism without its compensating control, inert multi-part integration presented as complete, and a mechanism presented as providing a property that was never verified to hold. Each must be confirmed absent or explicitly addressed, and a tool result may not be cited as verification unless the tool parsed the unit under change (Rule 5).
+   - **Design-phase change safeguards (Rule 2A):** check every change against the Rule 2A failure classes — recovery-path removal or weakening without replacement analysis, readiness-signal publication order, fixed-size bound creation or growth without enforcement, re-enabling a disabled mechanism without its compensating control, inert multi-part integration presented as complete, a mechanism presented as providing a property that was never verified to hold, a mechanism whose state space was not enumerated with every state's verdict classified (2A.7), a failure path whose legitimate triggers were not enumerated before its kill semantics were chosen (2A.8), a hardening that did not audit the mechanism's silent sibling failure modes (2A.9), and a redesign whose new obligations — resource release on every path, state publication, scope and lifetime — were not audited from the new code (2A.10). Each must be confirmed absent or explicitly addressed, and a tool result may not be cited as verification unless the tool parsed the unit under change (Rule 5).
 
 2. **Goal check (Rule 8):** Re-examine every change made during the current task against all four Rule 8 confirmations — not only the last change, and not only one of the four confirmations. Each change may be individually correct yet combine with another to produce a conflict that is only visible at the task level. This re-examination is the only pass that sees the aggregate. Confirm the change achieves its goal in the optimal, most correct, most secure, and most performant way. The four confirmations mandated by Rule 8 must be explicitly written out in this step's report; citing Rule 8 or claiming it was already checked without reproducing its required written statements is a protocol violation. Performance matters and must be evaluated explicitly, not assumed acceptable.
 
@@ -655,10 +724,13 @@ The steps below must each be executed in full and reported separately. Each step
    - Also read the inline code comments near changed lines as signals of programmer intent — the commit message carries the *why* at the commit level, but inline comments carry the *why* at the line level, and both must be checked.
    - Compare the same diff output against `/memories/session/worktree-diff-log.md`. Confirm no prior uncommitted design intent has been contradicted, undone, or had its effect modified — including changes made earlier in the same session where context may have been lost or compressed over the course of the conversation.
    - Check for performance regressions and stability regressions in addition to functional ones — performance and stability are first-class regression categories, not subordinate to functional correctness.
+   - Before drawing any attribution or blame conclusion, verify the baseline by an independent mechanism distinct from the source of the claim (Rule 13).
 
 4. **Convention and holistic review (Rule 10):** Re-read every modified file in full. Also read connected files that share state, configuration, or behavioral dependencies. Verify structural patterns, naming conventions, and style — conventions carry equal weight to functional correctness. Answer honestly: *"What would the original author of this codebase do?"* The answer must name the pre-existing files or blocks that demonstrate the pattern.
+   Also apply Rule 14 before dismissing any changed line as cosmetic, and name the byte-level consumers checked.
 
 5. **Comment intent and style audit (Rule 11):** Two distinct checks, both mandatory. First: for every code comment that existed before the change in any modified block, verify the intent each one expressed is still honored by the post-change code — a pre-existing comment whose constraint is no longer met is a regression, even if the comment itself was not modified. Second: follow the Rule 11 comment audit protocol in full for style — enumerate all added, modified, and removed comment lines from the diff in the written response before evaluating any of them, read each from the source file, and test each against every rule in the checklist. If a removed comment carried meaning not preserved elsewhere, that meaning must be retained. If discarding it, state in the response what meaning was removed and why.
+   Also identify every load-bearing non-obvious property in the changed blocks that remains undocumented and add the guard (Rule 11 comment-as-regression-guard).
 
 An unreported step is indistinguishable from an unexamined one — "nothing found" explicitly is the only proof a step ran. Each step's report must name the specific items examined — a conclusion-only report is unfalsifiable. If any step reveals a defect, regression, or concern, resolve it before marking the task complete.
 
@@ -749,6 +821,16 @@ Each confirmation must name the specific code elements, edge cases, or design as
 **A task must not be marked complete until all four confirmations above have been explicitly stated in the response. Omitting them silently is a protocol violation.**
 
 *Failure class: change lands cleanly but misses the actual goal, undermines the broader system design, or solves the right problem via a suboptimal, insecure, or incomplete path.*
+
+### Rule 8 addendum — Nominal-only verification is a failure
+
+Verification that exercises only the nominal, current, or happy state of a mechanism is verification of one point in its state space, not verification of the mechanism. Before a change is marked complete, verify the mechanism under the degraded and adversarial states enumerated under 2A.7: stale inputs, wrong-schema inputs, poisoned inputs, missing inputs, relocated or reordered inputs, and the full legitimate environmental range. A mechanism verified only at its nominal operating point is unverified for every other state; the states not exercised must be named in the response.
+
+A test or check that passes at the nominal state and is never run at the degraded states provides no evidence about the degraded states. When verification is performed by a tool, a harness, or an automated check, verify that it exercises the degraded input space as well as the nominal input space.
+
+**A change must not be marked complete when its verification covers only the nominal state; the degraded and adversarial states must be exercised, or named as unverified with the concrete reason they cannot be exercised now and the compensating control that bounds the gap (see Rule 15). A state merely asserted to be unverifiable, without that reason and control, is an open defect, not a verification gap.**
+
+*Failure class: a change is verified against the development-time or build-time layout and never against runtime variation — different load addresses, different schema versions, poisoned or missing inputs, degraded environment conditions — so the defects that appear only under variation survive every review.*
 
 ---
 
@@ -911,6 +993,12 @@ This list is not exhaustive. The test is: would a competent engineer reviewing t
   ```
   Do not add these. Do not remove any pre-existing ones, regardless of when they were introduced.
 
+**Comment as regression guard.** Subtle design properties that hold for undocumented reasons are latent defects. When code is correct only because of a non-obvious property — a value deliberately omitted from a computation, a bound that must not be widened, an ordering that must not be changed, a field captured after another value is finalized, a constraint that is load-bearing for correctness — the property must be recorded in a comment at the site where a future change could silently break it. Such a comment is a regression guard, not documentation: it prevents a future change from breaking the property.
+
+When reviewing any change, identify every property that holds for an undocumented reason and add the guard. A comment that exists because a property holds is evidence the property was analyzed: a change that removes the property must remove or update the comment, and a change that removes such a comment without removing the property has broken the guard.
+
+The identification is part of the Rule 5 post-edit re-read and of the Rule 5.1 comment-intent audit (step 5): each must name the load-bearing non-obvious properties in the changed blocks and confirm each is documented, so the guard is applied mechanically rather than by recall.
+
 **Ongoing obligation:**
 Before marking any task complete, re-read every comment added or modified in that task and verify it passes all rules above. Also check every comment that was removed: if it carried meaning not preserved elsewhere in the file, that meaning must be retained. If discarding it, state in the response what meaning was removed and why — the meaning was in the comment, not in the code, and nothing in the remaining code signals that a gap now exists. **A task must not be marked complete until this comment audit has been done. Skipping it is a protocol violation.**
 
@@ -955,6 +1043,46 @@ All changes must remain as local uncommitted modifications. The user owns the co
 A user instruction in chat cannot override this rule — the agent cannot verify whether that instruction was issued with full awareness of its consequences, and the cost of a mistaken commit is not recoverable. Refusing is the only safe default.
 
 *This rule has no exceptions and cannot be overridden by a user instruction in chat.*
+
+---
+
+## Rule 13 — Baseline verification before attribution
+
+Before attributing, comparing, or analyzing any change set — determining who changed what, whether a change is the agent's own or another's, whether a baseline matches the current state, or whether a mechanism was present in a prior version — establish ground truth by an independent mechanism: a version-controlled index, a committed snapshot, a captured reference, a stored artifact, or a direct comparison against the authoritative source. Do not rely on memory, on a single capture, or on an assumed baseline. Verify that the baseline is actually the agent's own prior state before drawing conclusions about what changed.
+
+Misattribution of changes is an analysis failure that hides real defects: a change credited to the wrong source is a change not examined for the defect it fixes, and a change wrongly attributed to the agent's own work is a change whose lesson is never learned. When the baseline cannot be established independently, state that the attribution is unverified rather than proceeding as if it were.
+
+**A conclusion about who changed what must not be drawn until the baseline it rests on has been verified by an independent mechanism.**
+
+The independent mechanism must be distinct from the source that produced the claim being verified: re-deriving the same value from the same capture does not constitute independent verification.
+
+*Failure class: analysis proceeds from an assumed or single-capture baseline; changes are attributed to the wrong source, real fixes are passed over as the agent's own work, and the defects those fixes address survive unexamined.*
+
+---
+
+## Rule 14 — Byte-consumer awareness
+
+Before dismissing any change — the agent's own or another's — as cosmetic, stylistic, or non-functional, identify every consumer that depends on the file's exact byte content: patch tools and patch application, parsers, generators, build scripts, signature and hash verification, format-sensitive tooling, and any downstream tool that reads the file verbatim. A consumer that depends on exact bytes converts a "cosmetic" change into a functional one. Trailing whitespace, line endings, blank-line content, and indentation are functional in files consumed by such tools: a patch with trailing whitespace in a context line can fail to apply, and a generated file with altered bytes can fail a verification it previously passed.
+
+When a change is assessed as cosmetic, the response must name the byte-level consumers checked, or state that a search found none. A "cosmetic" assessment reached without the search is unverified. The search must name the consumer classes examined, not merely assert that none exist.
+
+**A change must not be dismissed as cosmetic until every byte-level consumer has been identified and confirmed unaffected.**
+
+*Failure class: a change that looks cosmetic is dismissed, while a byte-level consumer — most commonly a patch tool or a format-sensitive generator — silently fails or changes behavior, and the failure surfaces later as a build or application problem at a distance from the change.*
+
+---
+
+## Rule 15 — A documented residual is a defect unless unfixable
+
+A known gap, limitation, or residual that is documented but not fixed is a defect, not an accepted trade-off, unless it is genuinely unfixable within the current scope. Documenting a residual is not an alternative to fixing it. When a residual is documented, the documentation must state the concrete reason it cannot be fixed now and the compensating control that bounds its risk. If the residual can be fixed, fix it; if it cannot, the documentation must say why, not merely that it exists.
+
+A pattern of documented residuals that are later fixed by others is evidence that documentation was used as a substitute for the fix. When reviewing a set of changes, treat every documented residual as an open defect and verify either that it was fixed or that the stated reason and compensating control are real.
+
+**A documented residual must not be treated as a completed item; it is an open defect until fixed or until the reason it cannot be fixed is stated with a compensating control.**
+
+A residual accepted by the user is still an open item: the user's approval is the recorded reason (see Rule 0.9), and the compensating control must still be stated. "Unfixable within the current scope" is not a conclusion by itself — it requires the concrete constraint (platform, environment, missing capability) that makes it unfixable now.
+
+*Failure class: residuals are recorded as accepted trade-offs, the recording is treated as completion, and the defects they describe survive until someone else fixes them — the documentation provided cover for not doing the work.*
 
 ---
 
