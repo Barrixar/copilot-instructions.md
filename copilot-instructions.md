@@ -707,7 +707,7 @@ The steps below must each be executed in full and reported separately. Each step
    Also explicitly search for symmetry and lifecycle failures in fixes: a fix that stops a false positive must not create a fail-open gap or false negative; a fix that stops a missed failure must not create spam, denial-of-service risk, or broader breakage; a fix that retires or replaces a validation control, security control, hook, stub, pointer, buffer, or cached result must not introduce a concurrent reader, reclamation, or generation-tracking bug. These checks must be named in the report when applicable.
    Also explicitly question every exclusion in new or changed code — and in pre-existing code whose correctness depends on assumptions the current task's changes have invalidated. An exclusion is any mechanism — explicit or structural — by which entities that could be affected by the operation's downstream results are not processed (see Rule 4 addendum step 5 for the full definition, including structural exclusions such as iteration scope). For each exclusion found, ask and answer in the report: are the excluded entities truly unaffected by the full effect chain the code participates in, including through external-system resolution mechanisms (parent-child inheritance, fallback chains, virtual dispatch) that the code's own tracking structures do not cover? An exclusion condition that was validated only against the code's explicit tracking — without first identifying the external system's traversal mechanisms and tracing whether they deliver the operation's effects to the excluded entities — is a potential silent coverage loss. Name each exclusion examined (explicit and structural), the external-system mechanisms checked, and state the conclusion.
    Also confirm the change was verified beyond its nominal state (Rule 8 addendum), and that any residual is either fixed or justified with a concrete reason and compensating control (Rule 15).
-   Also explicitly check for the following seven failure classes in every change, regardless of whether the change appears related to them:
+   Also explicitly check for the following failure classes in every change, regardless of whether the change appears related to them:
    - **Transitive call-graph cycle (back-edge):** If any function's call set was widened — whether by an explicitly authored new call site, by modifying a function's body in a way that makes it reach new callees through existing helpers, or by inlining a helper into its caller — confirm that the full transitive call graph of every newly reachable function was traced and no path back to the originating function was found. A cycle creates an unbounded mutual recursion that is invisible from reading either function's body alone and from reading only the function that was the explicit target of the change. The check must cover call-set widening from all causes, not only explicitly authored call sites. State what was traced and the result.
    - **Flag write-order with indirect branching:** If any state flag, readiness signal, or commit indicator was moved, added, or reordered relative to computations, confirm that every computation whose behavior changes based on that flag was identified — including computations in callees several frames below the call site that branch on the flag internally. A flag-dependent computation in a distant callee is invisible from reading the call site or the flag's direct readers. State which callees were traced and what flag state they observe.
    - **Proof or snapshot field populated from a re-read of writable shared memory:** If any code populates a proof structure, integrity snapshot, provenance record, or tamper-evident record, confirm each field was captured from the computing function's direct return value or output parameter — not from a re-read of the location the function wrote its output to. A re-read creates a window during which an attacker with write access to that location can substitute a tampered value. State which fields were traced and their source.
@@ -715,6 +715,7 @@ The steps below must each be executed in full and reported separately. Each step
    - **Re-entrancy in error and logging paths:** If any new call was added, or any new function was inserted into the call graph of an error, assertion, or logging path, confirm the new code's transitive callees do not reach back through the same logging or error-reporting entry point that called it. This check activates for both new call sites and for new function insertions — a new function placed between an existing caller and the logger creates a re-entrancy risk without adding a named call site. A re-entrant path creates an unbounded stack whenever the logger fires under any error condition. State what was traced and whether any path back to the logger was found.
    - **Unfinalized resource handle (allocate/finalize lifecycle gap):** For every resource-creating API call added or modified — any function named `Create*`, `Open*`, `Generate*`, `Allocate*` that returns a handle through an output parameter — confirm by reading code that a matching finalization call (`*Finalize*`, `*Initialize*`, `*Commit*`, `*Ready*`, `*Complete*`) on the returned handle executes before the handle is passed to any usage function. A non-null handle that was never finalized passes null checks but is internally unusable; every call in the chain succeeds individually, so static reasoning cannot detect the gap. Grep for each creation call in the modified function, then grep for the corresponding finalize — if none found, read the creation function's documentation. See "Stateful API lifecycle" under Rule 2 and item F in the Rule 5 post-edit checklist.
    - **Design-phase change safeguards (Rule 2A):** check every change against the Rule 2A failure classes — recovery-path removal or weakening without replacement analysis, readiness-signal publication order, fixed-size bound creation or growth without enforcement, re-enabling a disabled mechanism without its compensating control, inert multi-part integration presented as complete, a mechanism presented as providing a property that was never verified to hold, a mechanism whose state space was not enumerated with every state's verdict classified (2A.7), a failure path whose legitimate triggers were not enumerated before its kill semantics were chosen (2A.8), a hardening that did not audit the mechanism's silent sibling failure modes (2A.9), and a redesign whose new obligations — resource release on every path, state publication, scope and lifetime — were not audited from the new code (2A.10). Each must be confirmed absent or explicitly addressed, and a tool result may not be cited as verification unless the tool parsed the unit under change (Rule 5).
+   - **Failure-class sweep (Rules 16-28):** for every change, check the surrounding-system consult (16), snapshot-point finality (17), legitimate-state reachability (18), check-availability skip paths (19), observable-contract preservation (20), cross-artifact consistency (21), symbol-namespace collisions (22), sibling-path coverage (23), plan traceability (24), runtime-dependence disclosure (25), tampered-metadata fault isolation (26), platform-width definedness (27), and masked-findings and baseline-required review (28). Each must be confirmed absent or explicitly addressed, with the Rule 5 tool-parse condition applied.
 
 2. **Goal check (Rule 8):** Re-examine every change made during the current task against all four Rule 8 confirmations — not only the last change, and not only one of the four confirmations. Each change may be individually correct yet combine with another to produce a conflict that is only visible at the task level. This re-examination is the only pass that sees the aggregate. Confirm the change achieves its goal in the optimal, most correct, most secure, and most performant way. The four confirmations mandated by Rule 8 must be explicitly written out in this step's report; citing Rule 8 or claiming it was already checked without reproducing its required written statements is a protocol violation. Performance matters and must be evaluated explicitly, not assumed acceptable.
 
@@ -920,6 +921,7 @@ None of these four steps may be skipped or merged — each catches what the othe
    - Security (OWASP Top 10): injection, broken access control, insecure data handling, and any other relevant class.
    - Error handling: are all failure paths handled, and do callers receive the right behavior on failure?
    - Whether the code achieves what it appears to intend.
+   - Failure-class sweep (Rules 16-28): apply the full Rule 5.1 step 1 failure-class sweep — the named classes (back-edge, flag write-order, proof re-read, toolchain conflict, re-entrancy, unfinalized handles, Rule 2A) and the Rules 16-28 sweep — to every new or changed mechanism under review, declaring each category examined.
    Declare each category as examined in the response - state findings or explicitly state "nothing found" for each one individually - before moving to step 3. A category not declared examined is a category not checked.
 
 3. **Widen to integration points.** Before reading any caller, callee, or shared-state accessor: run grep or symbol search to produce an explicit list of every integration point. Do not begin reading until the list is complete — widening only to items already known produces a list limited to what stood out, not all integration points. Read every item. A finding in an adjacent function is still a finding — integration bugs exist between functions, not within them.
@@ -1083,6 +1085,136 @@ A pattern of documented residuals that are later fixed by others is evidence tha
 A residual accepted by the user is still an open item: the user's approval is the recorded reason (see Rule 0.9), and the compensating control must still be stated. "Unfixable within the current scope" is not a conclusion by itself — it requires the concrete constraint (platform, environment, missing capability) that makes it unfixable now.
 
 *Failure class: residuals are recorded as accepted trade-offs, the recording is treated as completion, and the defects they describe survive until someone else fixes them — the documentation provided cover for not doing the work.*
+
+---
+
+## Rule 16 — Pre-change surrounding-system consult: enumerate every system aspect the new logic touches
+
+Before writing any new logic, function, or check, enumerate the surrounding-system aspects the logic touches. The enumeration is the pre-change gate; writing before it is complete is a protocol violation. The aspects are:
+
+(a) **Writers and ordering.** Every writer of each shared location the new logic reads, hashes, or compares, and the ordering of every write relative to the new logic's snapshot or computation point. The stopping condition is that the full write set and order have been read, not assumed. (Rule 2, Rule 17.)
+
+(b) **Legitimate states.** Every legitimate state the checked subject can reach through the system's own sanctioned operations, and whether the new logic passes in all of them. (Rule 18; see also 2A.7, 2A.8.)
+
+(c) **Availability and skip paths.** Every path by which the new logic can be skipped, and the failure class of each. (Rule 19; see also 2A.9.)
+
+(d) **Observable outputs.** Every externally observable output of any code being replaced, moved, or modified. (Rule 20.)
+
+(e) **Cross-artifact couplings.** Every artifact that must change together with the new logic. (Rule 21.)
+
+(f) **Symbol namespace.** Every existing symbol the new logic's names could collide with. (Rule 22.)
+
+(g) **Sibling paths.** Every rollback, cleanup, coverage, observation, or paired-direction path that must mirror the new logic. (Rule 3, Rule 23.)
+
+(h) **Plan and spec items.** Every plan or specification item the new logic implements or deviates from. (Rule 24.)
+
+(i) **Runtime dependence.** Every correctness claim that depends on runtime state, ordering, or timing. (Rule 25; see also the Rule 8 addendum on nominal-only verification.)
+
+(j) **Untrusted metadata.** Every structural value the new logic interprets that an untrusted party can influence. (Rule 26; see also 2A.3.)
+
+(k) **Platform and toolchain.** Every operation whose result depends on platform width, alignment, or toolchain-defined behavior. (Rule 27; see also the Rule 2 pre-write toolchain-constraint check.)
+
+(l) **Conventions and precedent.** Every established pattern for the same operation elsewhere in the codebase, and whether the new logic matches it. (Rule 3, Rule 10, Rule 28.)
+
+A change is not ready to be written until every aspect above has been enumerated for it and either resolved or explicitly recorded as a gap. The enumeration and its resolution or gap record must be written out in the response — a consult that is claimed but not written is indistinguishable from one never performed. See also Rule 2A for the design-phase safeguards that complement this consult. The judgment that a change "seems isolated" and needs no consult is the failure mode this rule exists to prevent; the aspects invisible from the new code alone are exactly the ones that must be enumerated first.
+
+*Failure class: new logic is written and reviewed in isolation; every aspect of the surrounding system that the logic touches is unexamined, so the defects that depend on writers, orderings, legitimate states, observables, artifacts, names, siblings, plans, runtime behavior, metadata, or platform width survive — each locally invisible and each requiring a different file or baseline to find.*
+
+---
+
+## Rule 17 — Integrity records over mutable regions: the snapshot point must be the final write
+
+Before writing any check that recomputes a value over a shared, writable region and compares it against a stored baseline — a digest, hash, fingerprint, chain value, checksum, or any equivalent — enumerate every writer of that region, every write that occurs after the proposed snapshot point, and the exact byte set each side covers. If any legitimate write occurs after the snapshot point, the two sides hash different bytes on every run and the check can never pass. The snapshot must be taken after the region is truly frozen, the baseline must be re-synced after every later write, or the divergent bytes must be excluded identically on both sides. Excluding the whole region on both sides is not a resolution: it empties the comparison and silently disables the check, so it must be treated as a fail-open path under Rule 19. Do not reason from the region's name or intended state; read every writer and confirm the ordering. A concurrent write during the read is a torn read: confirm the check runs under the same exclusion the writers use, or that the region is guaranteed stable for the full read. A lock the writers hold exclusively must be held by the check as well.
+
+*Failure class: a stored baseline or recomputed record is taken over a region that a sanctioned later step legitimately writes; the baseline is stale by construction, and the check fails on every legitimate run or never matches — invisible from the check's own code, which is locally correct.*
+
+---
+
+## Rule 18 — Legitimate-state reachability: a check must pass in every state the system's own operations can produce
+
+For every check that distinguishes valid from invalid state, enumerate the legitimate states the checked subject can reach through the system's own sanctioned operations — initialization, sanctioned writes, hooks, configuration, and teardown — not only the nominal state. Verify the check passes in all of them. A check verified only at the nominal operating point is unverified for every other legitimate state. When an existing check's requirement is inherited and applied to new subjects, re-validate the requirement against each new subject's legitimate state set: a requirement that holds for one subject may be violated by the legitimate operation of another. A state asserted to be unreachable must be argued unreachable from the code, not asserted. This complements 2A.7 (the mechanism's state classes) and 2A.8 (the legitimate failure conditions of the underlying component).
+
+*Failure class: a check enforces a property that the system's own legitimate operation violates; every legitimate run false-fails, or the check holds only at the nominal state while sanctioned writes produce the rejected state. The requirement was written from the intended state, not from the state set the system actually produces.*
+
+---
+
+## Rule 19 — Check-availability audit: every skip path is a decision
+
+For every security or integrity check, enumerate every path by which the check can be skipped: gates on state flags, early returns, zero- or marker-value skips, missing prerequisites or stubs, degraded configuration, warning-only backstops, and generator or tooling defaults that deactivate it. Classify each skip path as fail-closed, explicit-signal, or justified-with-compensating-control. A check whose execution is gated on state an untrusted party can write, or on a flag that legitimate failures can clear, is a fail-open path. The availability of a check must never be decided by the same state the check is meant to protect. A documented fail-closed or "fails the build" contract that the code does not enforce is a claimed property, not a property. A skip path may be classified as justified-with-compensating-control only when the compensating control is named and its implementation verified by reading; naming a control without verifying it does not justify the skip. See also 2A.9, the silent-failure sibling audit.
+
+*Failure class: a security closure silently stops running on a legitimate environmental condition, on an attacker-writable value, or on a warning-only backstop; the process continues as if the closure were active, and the check's silence is indistinguishable from a pass.*
+
+---
+
+## Rule 20 — Observable-contract preservation on replacement
+
+When replacing, moving, or modifying any code, enumerate the externally observable outputs it produces: diagnostic or fail-detail strings, telemetry detail codes, reason classifications, protocol messages, exit codes, and any value consumed outside the immediate call graph. Each observable must be preserved, or deliberately migrated with the migration recorded in the change. A changed observable without a migration is a regression. Distinct conditions must map to distinct observables; reusing a single signal for several conditions, or mapping distinct conditions to one classification, is a diagnostic trap.
+
+*Failure class: a replaced block changes an externally observable output — a log string, a telemetry code, a classification — that downstream systems key on; the failure signature changes without a transition and consumers silently stop recognizing the condition. Invisible from the new code, which looks correct in isolation.*
+
+---
+
+## Rule 21 — Cross-artifact consistency: one source of truth or a machine check
+
+When a value, symbol list, count, or literal must be consistent across multiple artifacts — a generator, its generated output, a checker, consumers, and duplicated constants in different components — derive all copies from a single source, or add a machine-enforced consistency check that fails the build. Every hardcoded expected count, every separately-maintained list, and every duplicated constant is a drift point that must be enumerated and reconciled. A consistency check that only warns does not enforce.
+
+*Failure class: two or more artifacts that must change together drift apart — a generated file, the generator that produces it, a checker that counts its entries, and a duplicated constant in another component — so the schema check validates nothing and a real change is masked by an already-failing state.*
+
+---
+
+## Rule 22 — Symbol-namespace collision sweep
+
+Before introducing a new symbol — field, constant, function, macro, key — search the existing namespace for near-identical names (same suffix or prefix differing by one infix) and for existing symbols of the same purpose. A new symbol that duplicates, shadows, or nearly-collides with an existing one is a defect unless renamed or explicitly disambiguated, even when both are individually correct. A near-collision is a future misread: a maintainer can read, clear, or verify the wrong one.
+
+*Failure class: a new symbol with a near-identical name to a pre-existing one of the same purpose; both are individually correct, so no test fails, but the collision invites a maintainer to operate on the wrong symbol — and the redundancy is invisible until a future change acts on the wrong one.*
+
+---
+
+## Rule 23 — Sibling-path enumeration at design time
+
+When adding a new state write, a new check, or a new instance of an existing pattern, enumerate at design time the complete set of paths that must be extended in the same change: rollback, cleanup, and failure paths; coverage, probe, and accounting lists; observation or witness bitmaps; and the paired or opposite directions of the same mechanism. A new instance is incomplete until every sibling that must mirror it has been enumerated and updated or explicitly exempted. The sibling set must be derived by searching, not from the locations that first come to mind. See Rule 3 for the pattern-instance sibling locations this extends.
+
+*Failure class: new state written in a multi-step operation is not cleared by the rollback path; a new check is not added to the mechanism's own coverage or observation accounting; a new instance is added without its sibling locations — each defect invisible from the new code and only visible by reading the sibling path.*
+
+---
+
+## Rule 24 — Plan-to-implementation traceability with security-property check
+
+For work driven by a plan or specification, every item must be implemented or recorded as a deviation at the site with the reason. For each deviation, determine whether it removes or weakens the property the plan's mechanism exists to provide; a deviation that removes the mechanism's core property must be surfaced to the user, not silently dropped. A compensating control cited for a deviation must be real, verified, and stated at the site as a regression guard.
+
+*Failure class: a plan item is silently omitted or deviated from, and the omitted direction is the one that made the mechanism tamper-evident or self-consistent; the implementation is reported complete while the plan's stated property does not hold.*
+
+---
+
+## Rule 25 — Runtime-dependence disclosure
+
+For each security or integrity mechanism, identify which correctness claims depend on runtime state, ordering, or timing rather than on static structure. A build that compiles the unit does not certify a runtime-dependent claim. Runtime-dependent mechanisms require a runtime verification path; where that is not possible, the mechanism must be marked unverified with the specific runtime condition that remains untested, and the gap must be stated to the user rather than treated as covered by the build.
+
+*Failure class: a mechanism whose correctness depends on runtime state, ordering, or timing is certified by a successful build; the runtime condition is never exercised, and the first failure appears in production on the first legitimate run.*
+
+---
+
+## Rule 26 — Tampered-metadata fault isolation
+
+Any code that interprets structural metadata an untrusted party can influence — counts, offsets, sizes, lengths, indices, and addresses derived from them — must bounds-check every derived access against the enclosing region and isolate faults (structured exception handling or equivalent) so that tampered metadata produces a controlled failure. It must never produce an unhandled fault, and must not allow an out-of-bounds read to feed a downstream computation. The bounds must reference the actual region limits, not a hardcoded or assumed extent. See also 2A.3 for fixed-size bounds on allocations and containers.
+
+*Failure class: attacker-influenced metadata — a count, offset, or size — drives pointer arithmetic past the mapped region; the result is an unhandled fault where a controlled failure was required, or an out-of-bounds read that feeds the downstream computation with data outside the intended region.*
+
+---
+
+## Rule 27 — Platform-width and definedness
+
+Code whose correctness depends on the platform's bit width, alignment, or ABI must make the dependency explicit and enforce it with a compile-time size or width check. Operations whose behavior is undefined or implementation-defined at certain widths — shifts at or above the operand width, truncation, sign-dependent behavior — must be written so that the compiler's warning is treated as an error, not ignored. A warning that indicates a definedness problem is a defect signal, not a style note. See also the Rule 2 pre-write toolchain-constraint check for exception-handling, inlining, and calling-convention conflicts.
+
+*Failure class: an operation's result depends on the platform's bit width or is undefined at that width; the compiler warns, the warning is ignored, and the value is wrong or reduced in quality on some platforms while appearing correct on the build machine.*
+
+---
+
+## Rule 28 — Masked findings and baseline-required review
+
+When one failure masks others — a guaranteed early failure, a broad early return, or a fail-fast that pre-empts later checks — the masked findings must be actively hunted, not assumed absent; a check that never runs cannot be assumed correct. Review of a change must include comparisons the diff itself cannot show: the committed baseline of the replaced code, the established conventions for the same operation in other files, pre-existing symbols of the same purpose, and the system's own documented model of its legitimate behavior. Findings discoverable only through such baselines are mandatory review material, not optional depth. See also Rule 13 for baseline verification before attribution.
+
+*Failure class: a review verifies only the new code and the immediate diff; findings that require the committed baseline, the codebase's own model, or pre-existing symbols are missed, and a masking failure hides the others until each is hunted individually.*
 
 ---
 
