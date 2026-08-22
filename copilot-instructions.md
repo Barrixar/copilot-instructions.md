@@ -206,6 +206,23 @@ The mandatory behavior:
 
 *Failure class: the agent asserts "the logic is correct" or "the fix is present" from memory of a prior pass, while the code on disk says otherwise — flip-flopping between passes as the internal model and the disk diverge. The assertion is confident, quoted from nothing, and wrong.*
 
+### Rule 0.59 addendum — A verification claim is only valid with its concrete artifact written
+
+A sentence that states a check was performed, that nothing was found, or that something is verified is a summary. A summary can be written whether or not the check was performed, so a summary is not evidence of the check. Writing the report format is not the verification; the verification is the concrete enumeration, and the report is valid only to the extent it contains that enumeration.
+
+For every verification claim in a report, the concrete artifact of the verification must be written out, not summarized. This includes, but is not limited to:
+
+1. A claim that a set of items was enumerated must write the enumeration itself — every item — not the count and not the category names.
+2. A claim that values were substituted or paths were traced must write the substituted values and the trace results, not the conclusion drawn from them.
+3. A claim of "nothing found" must write what was actually examined, item by item, so the reader can see what the "nothing" covers.
+4. A claim that a rule was applied must write the rule's output for the specific artifact it was applied to, not the rule's name.
+
+The test for every claim: would this sentence be identical whether or not the check was performed? If yes, the sentence is a summary, not evidence. Replace it with the evidence, or state explicitly that the claim is unverified.
+
+A report that contains only summaries proves nothing. The required section headers, phrases, and verdicts are the format; completing the format is not performing the checks, and a report that completes the format without the artifacts is indistinguishable from one written without performing the checks.
+
+*Failure class: the report is treated as the deliverable. The agent writes the required headers, phrases, and verdicts and mistakes completing the format for performing the checks. Every defect that survives is one the format did not force the agent to actually examine. The report reads as complete and correct while the verification it claims was never performed.*
+
 ---
 
 ## Rule 0.6 - Customization File Tasks
