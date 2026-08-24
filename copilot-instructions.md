@@ -476,6 +476,73 @@ The mandatory behavior:
 
 *Failure class: real-time simulation entity containers reallocate heap memory during continuous update loops causing latency spikes, and trajectory reflection algorithms run unbounded iteration loops under boundary edge cases.*
 
+### Rule 0.58 twenty-fifth addendum — Universal Day-1 Language Standard Edition Exhaustion & Prohibition of Baseline Deferral
+
+When a specific language standard edition, runtime version, platform tier, or quality constraint is specified by the user or required with an exclusion of below-standard features, generating any code using pre-standard baseline idioms—even in the initial prototype, draft, or Turn 1 emission—is strictly prohibited.
+
+The mandatory behavior:
+1. **Pervasive Standard-Tier Exhaustion on Line 1:** Every syntactic construct, statement, expression, type declaration, data structure, function signature, member routine, control flow path, memory abstraction, error propagation mechanism, concurrency model, and standard library invocation across 100% of compilation units must adopt the target standard's most modern, type-safe, expressive, and robust facilities from the very first line authored.
+2. **Prohibition of "Refining Later" Deferrals:** Authoring baseline boilerplate, legacy constructs, or unhardened scaffolds with the intent of modernizing them in subsequent turns or passes is a catastrophic protocol violation. The initial emission on Turn 1 must represent the fully exhausted standard release.
+3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies universally across all programming languages, platforms, runtimes, and architectural tiers. The absence of a specific construct, keyword, or API from this document or user prompts never permits the use of a pre-standard, deprecated, or legacy alternative. Whenever the target standard provides a modern, safer, or more expressive facility for any operation, its use is mandatory across 100% of statements.
+
+*Failure class: the agent generates a working baseline using legacy idioms, assuming modern language facilities can be added later if prompted, producing an unmodernized codebase on Turn 1.*
+
+### Rule 0.58 twenty-sixth addendum — Absolute Separation of Toolchain Acceptance from Semantic & Idiomatic Compliance
+
+A clean build, zero compiler or linter diagnostic warnings at maximum strictness settings, and successful execution under modern standard flags is NEVER evidence of idiomatic standards compliance or adherence to user negative constraints.
+
+The mandatory behavior:
+1. **Toolchain Acceptance Fallacy Recognition:** Modern compilers, interpreters, linters, and build toolchains accept decades-old legacy constructs under modern standard flags for backward compatibility. An agent must never cite clean toolchain output or passing test suites as proof that legacy constructs were avoided.
+2. **Mandatory Token-Level Negative Inference Scan:** Before releasing any code, the agent must perform an active, exhaustive negative token scan across every line of authored code on disk, hunting specifically for any pre-standard syntax, legacy idioms, deprecated APIs, raw unmanaged primitives, untyped structures, manual conversions, out-of-band error codes, or below-standard constructs of any kind.
+3. **Universal Class Invariant:** This separation applies across all toolchains, languages, and ecosystems. Syntactic validity is a baseline prerequisite, never proof of standards adherence.
+
+*Failure class: the agent builds with strict flags, sees zero errors and zero warnings, and claims full standards adherence, unaware that legacy loops and methods compile cleanly without diagnostics.*
+
+### Rule 0.58 twenty-seventh addendum — Universal Implementation-Unit Micro-Logic Scrutiny & Perimeter-to-Core Parity Invariant
+
+Adopting a cutting-edge standard exclusively at public architectural boundaries (compiler flags, top-level type signatures, external boundary wrappers) while permitting internal helper functions, private routines, local loops, or subordinate implementation units to fall back on legacy idioms is strictly prohibited.
+
+The mandatory behavior:
+1. **Perimeter-to-Core Idiom Parity:** Every translation unit, interface definition, implementation unit, private method, static helper, nested scope, lambda closure, callback handler, data definition, utility routine, and test harness across all architectural tiers must maintain 100% standards and quality parity with public declarations.
+2. **Zero Mixed-Standard Tiers:** A codebase containing modern public types alongside legacy internal logic is defective. Modernization must penetrate 100% of statements across every layer of the architecture.
+3. **Universal Class Invariant:** This parity invariant applies across all software architectures and file structures. No subordinate function or private routine may be treated as low-priority or exempt from modern idioms.
+
+*Failure class: the agent modernizes public interface definitions, but leaves internal loops and helper methods in private implementation units in legacy pre-standard form.*
+
+### Rule 0.58 twenty-eighth addendum — Mandatory Autonomous Remediation in Evaluative Compliance Passes
+
+When the user asks to evaluate, audit, check, review, or question compliance against original requirements or instructions, treating the prompt as a pure reporting task, status query, or descriptive verification exercise is strictly prohibited.
+
+The mandatory behavior:
+1. **Immediate Actionable Remediation Gate:** Every compliance evaluation or retrospective inquiry on an existing codebase is an active code remediation mandate.
+2. **Autonomous Scan, Refactor, and Re-Verification:** The agent must open every source and interface file on disk, execute an adversarial negative token scan, eliminate all identified non-compliant or legacy constructs, refactor the codebase to full compliance on disk during that same turn, re-validate the build and tests, and only then output the verified evaluation ledger.
+3. **Prohibition of Narrative-Only Verification:** Expending turns outputting tabular ledgers, status descriptions, or test outputs while non-compliant lines survive in source files on disk is a direct protocol violation.
+4. **Universal Class Invariant:** This mandate applies to all evaluation, audit, review, and verification requests across all domains and project types.
+
+*Failure class: the user asks to evaluate compliance; the agent compiles, runs tests, and outputs a table claiming "SATISFIED" without opening source files to search for and eliminate surviving legacy idioms.*
+
+### Rule 0.58 twenty-ninth addendum — Universal Repository-Wide Atomic Modernization Sweeps
+
+When modernizing a codebase, introducing a new language feature, or correcting compliance issues, partitioning the remediation into piecemeal batches across multiple turns or steps is strictly prohibited.
+
+The mandatory behavior:
+1. **Workspace-Wide Atomic Sweeps:** When a modern pattern or correction is applied, the agent must sweep and refactor 100% of translation units across the entire repository in an immediate atomic pass.
+2. **Prohibition of Incremental Turn Deferral:** An agent must never update interface declarations in one turn and leave implementation units for subsequent user prompts. All files in the workspace must be brought to full compliance simultaneously within the active turn.
+3. **Universal Class Invariant:** This requirement applies across all multi-file workspaces regardless of file count, component structure, or technology stack.
+
+*Failure class: the agent fixes one interface in Turn N, waits for the user to prompt again, fixes another file in Turn N+1, creating an unnecessary multi-turn patching cycle.*
+
+### Rule 0.58 thirtieth addendum — Adversarial Token-Level Negative Inference Audits
+
+Auditing code against the agent's internal mental model of what it intended to build or against functional behavior (such as successful execution, nominal test passes, or absence of runtime crashes) rather than auditing against the literal token streams on disk is strictly prohibited.
+
+The mandatory behavior:
+1. **Adversarial Disk-Token Scrutiny:** All verification gates and self-audits must be formulated adversarially: search exclusively for what violates user negative constraints, standards mandates, and instructions.
+2. **Prohibition of Functional Confirmation Bias:** Functional correctness is a baseline prerequisite, not proof of standards compliance. An audit that asserts compliance without proving the universal exclusion of legacy tokens across all files on disk is invalid.
+3. **Universal Class Invariant:** This audit standard applies universally across all software engineering domains, programming languages, and test frameworks.
+
+*Failure class: the agent verifies that the software runs without crashing and concludes all requirements are satisfied, failing to inspect whether lines of code contain pre-standard syntax.*
+
 ---
 
 ## Rule 0.59 - Code-state claims require a fresh read
