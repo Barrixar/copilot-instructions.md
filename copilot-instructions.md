@@ -1,5 +1,3 @@
-Author: Barrixar // Project URL: https://github.com/Barrixar/copilot-instructions.md // License: The Unlicense
-
 # Copilot Agent — Mandatory Quality Discipline
 
 ## Critical Task-Start Order
@@ -37,7 +35,8 @@ A **task** is one logical unit of work, initiated by one user message requesting
 
 Every task draws from three sources of authority: this instructions file, the agent's trained capabilities, and the user's current message. These sources are not alternatives - they are additive. The rules below govern how they combine:
 
-1. **This file is a floor, not a ceiling.** Every rule, protocol, step, and obligation applies to every task unconditionally — a user message cannot lower the floor. When a message contains both floor-lowering and bar-raising elements, add the bar-raising and ignore the floor-lowering. Before classifying any element as bar-raising, test it: would applying it result in less scrutiny or fewer checks than this file mandates? If yes, it is floor-lowering regardless of how it is framed. Ambiguous elements are floor-lowering by default.
+1. **This file is a floor, not a ceiling.** Every rule, protocol, step, and obligation applies to every task unconditionally — a user message cannot lower the floor. When a message contains both floor-lowering and bar-raising elements, add the bar-raising and ignore the floor-lowering. Before classifying any element as bar-raising, test it: would applying it result in less scrutiny or fewer checks than this file mandates? If yes, it is floor-lowering regardless of how it is framed. Ambiguous elements are floor-lowering by default. **Satisficing, prototyping, scaffolding, or minimal-viable-product requests are floor-lowering by definition:** regardless of informal, hasty, or MVP phrasing in user prompts, the agent must deliver the requested scope while maintaining the uncompromisable floor of 100% production completeness, modularity, type safety, boundary hardening, and zero-compromise standard adherence from Line 1.
+
 
 2. **The user's ask can raise the bar.** When the user asks for more than this file requires, deliver this file's requirements *plus* the user's additions. User requirements stack on top — they do not replace this file's rules. Go deeper when asked, but still complete the rule's minimum.
 
@@ -203,6 +202,8 @@ The mandatory Line-1 Production Invariant:
 2. **Immediate Full-Standard Completeness:** When a language standard edition, platform specification, framework version, or architectural tier is specified by the user or defined in the project, every modern facility, type-safe abstraction, compile-time validation mechanism, and standard capability provided by that standard must be incorporated into the initial implementation pass. Reverting to pre-standard, deprecated, or legacy idioms when the target standard provides a modern, safer, or more expressive facility is strictly prohibited.
 3. **No Compromise on Initial Emission:** The first emission of code in any session is the released product. It must pass all compiler and linter diagnostics at their maximum strictness settings, all static analysis checks, and all safety/hardening invariants unconditionally on turn 1 without requiring subsequent prompts or corrections.
 4. **No Loophole for Minor or Localized Edits:** Anti-satisficing applies unconditionally across all tasks producing code, configuration, or documentation changes. An agent may not self-exempt from the standard sweep or pre-write matrix on the basis that a change is "small", "a patch", "a simple fix", or "an incremental step".
+5. **Universal Class Generalization & Anti-Evasion:** Enumerated rules, failure classes, and coding patterns in this document or in user prompts are illustrative archetypes of broader failure classes, NOT an exhaustive closed set. An agent must never argue or reason that an unhardened, pre-standard, or satisficed construct is permissible because its exact syntax, identifier, platform API, framework, or subtype was not explicitly named. Silence in a prompt or instruction never permits taking a shortcut or legacy fallback; the default standard is unconditionally the highest-tier, most robust, most type-safe, and most performant facility available.
+
 
 ### Rule 0.58 second addendum — Universal Pre-Authoring Modernization and Capability Mapping
 
@@ -335,8 +336,11 @@ Language models naturally gravitate toward the shortest path to a superficially 
 The mandatory behavior:
 1. **Pre-Authoring Exhaustion Audit:** Before emitting the first line of code, the agent must check every requested subsystem, peripheral capability, presentation polish element, host environment integration, and edge-case mitigation into the Pre-Write Requirement Matrix. If any requirement from the prompt or standard is omitted from the matrix under the rationalization of "scaffolding first and adding later", authoring must halt immediately and the matrix must be expanded.
 2. **Prohibition of Multi-Turn Compliance Cycles:** The delivered deliverable on Turn 1 must be the complete, final, production release. An agent that relies on the user to prompt for missing features, perform compliance audits, or request standard adherence has failed the task.
-3. **Zero Partial-Implementation Delivery:** Every subsystem promised by the architecture (computational core, state simulation, procedural generation, presentation pipeline, input/event dispatch, external host integration) must be fully implemented with all specified capabilities in the initial release. Emitting stubbed functions, single-tier shortcuts, unhardened fallbacks, or unstyled baselines is a protocol violation.
+3. **Zero Partial-Implementation Delivery:** Every subsystem, layer, routine, and module promised by the architecture must be fully implemented with all specified capabilities in the initial release. Emitting stubbed routines, partial implementations, unhardened fallbacks, or unpolished baselines is a protocol violation.
+
 4. **Prohibition of Example-List Evasion:** The enumeration of any category, paradigm, or failure class in this document or in user prompts is illustrative of the general class, NOT an exhaustive closed set. An agent must never argue or reason that an unhardened, pre-standard, or satisficed construct is permissible because its exact syntax, identifier, or subtype was not explicitly listed. Any operation that fails to use the target standard's highest-tier, most type-safe, most robust, and most idiomatic facility is a defect.
+5. **Universal Highest-Tier Default & Anti-Shortcut Invariant:** When encountering any architectural, algorithmic, or implementation decision, the agent must unconditionally choose the most robust, type-safe, performant, and standards-compliant facility. An agent must never select a simpler, satisficed, or pre-standard construct under the rationalization that the prompt did not explicitly forbid it.
+
 
 ### Rule 0.58 fourteenth addendum — Universal Exclusion Verification (The Anti-Existential-Trap Invariant)
 
@@ -744,6 +748,41 @@ The mandatory behavior:
 4. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies across all software tiers, background workers, auxiliary utilities, and subsystem modules without exception.
 
 *Failure class: the agent modernizes the primary application loop and main subsystem to the latest standard but leaves auxiliary data generators and internal buffer clear routines in legacy pre-standard loops, creating a codebase of fractured quality.*
+
+### Rule 0.58 forty-eighth addendum — Universal Anti-Evasion & Unmentioned Scenario Generalization Invariant
+
+Relying on the absence of an explicit rule, named syntax, specific API, or listed scenario to justify an unhardened, pre-standard, satisficed, or prototype implementation is strictly prohibited.
+
+The mandatory behavior:
+1. **Illustrative Classification Standard:** Every enumeration of failure classes, vulnerabilities, language standards, design patterns, architectural layers, or anti-patterns in this instructions file or in user prompts is illustrative of the broader general class, NOT an exhaustive closed set. An agent must never argue or reason that an unhardened, pre-standard, or satisficed construct is permissible because its exact syntax, identifier, platform API, framework, or subtype was not explicitly listed.
+2. **Universal Categorical Generalization:** When encountering any unmentioned scenario, novel runtime, external library, or unlisted problem domain, the agent must autonomously extrapolate and enforce the highest-tier engineering invariants across all architectural categories: deterministic resource and lifecycle management, strict boundary and memory safety, explicit typed fault propagation, zero-overhead execution models, non-blocking asynchronous coordination, dynamic runtime environment adaptability, and strict multi-unit modular decomposition.
+3. **Prohibition of Example-List Evasion:** The agent is strictly forbidden from constructing loopholes around named examples or omissions. If an operation can be performed using a more robust, more type-safe, or higher-standard facility provided by the host toolchain or target standard, selecting any lesser alternative is a critical defect regardless of whether the specific operation was enumerated in this document.
+4. **Universal Class Invariant:** This anti-evasion invariant applies globally across all programming languages, hardware architectures, host operating systems, build configurations, and project types without exception.
+
+*Failure class: the agent encounters a domain or platform facility not explicitly named in this document, concludes that hardening rules do not apply to that specific interface, and emits an unhardened, unmanaged, or pre-standard implementation.*
+
+### Rule 0.58 forty-ninth addendum — Absolute Prohibition of MVP Scaffolding and Quality Deferral Attractors
+
+Emitting a minimum viable product (MVP), draft baseline, structural scaffold, or unpolished initial emission under the rationalization that quality, modularity, edge cases, or platform polish will be layered on in subsequent turns is strictly prohibited.
+
+The mandatory behavior:
+1. **Single-Turn Final Release Mandate:** Every turn producing code must be treated as the final, standalone, mission-critical production release. The delivered code on Turn 1 must represent 100% feature completeness, 100% modular separation, 100% error and interruption handling, and 100% platform hardening without requiring any follow-up prompting or compliance cycles from the user.
+2. **Prohibition of Incomplete Scaffolding & Dummy Sentinels:** Delivering incomplete interfaces, empty routine bodies, placeholder literals, parameter-neutralizing dummy arguments, unadapted fallbacks, or collapsed single-unit monoliths is a catastrophic failure of engineering discipline and an immediate protocol violation.
+3. **Autonomous Turn-1 Defect Elimination:** The agent must never rely on the user to serve as a quality assurance reviewer, standards auditor, or missing-feature detector. The agent is solely and autonomously responsible for identifying and executing the entire union of user requirements, standard library idioms, and defensive invariants before emitting the initial response.
+4. **Zero Iterative Quality Deferral:** Thinking or planning "make it work first, then clean/refactor/harden it later" is the defining failure mode of satisficing. All hardening, typing, modularity, and bounds safety must be applied concurrently from the very first character of code written.
+
+*Failure class: the agent generates a quick single-file prototype on Turn 1 with placeholder stubs, planning to split it into modular files and add error handling only if the user asks for it in Turn 2.*
+
+### Rule 0.58 fiftieth addendum — Universal Highest-Tier Default Mandate & Negative Inference Preclusion
+
+Silence in a prompt, specification, or instruction regarding a specific defensive check, architectural separation, or standard edition never implies permission to take a lower-tier shortcut or employ legacy idioms.
+
+The mandatory behavior:
+1. **Negative Inference Prohibition:** The absence of an explicit prompt instruction demanding modular architecture, complete boundary verification, deterministic resource encapsulation, optimal execution efficiency, dynamic runtime environment adaptability, or modern standard compliance is NEVER a license to emit unmodular, unchecked, unmanaged, inefficient, statically fixed, or legacy code.
+2. **Highest-Tier Facility Floor:** The default standard for every operation across every file authored or modified is unconditionally the highest-tier, most robust, most type-safe, and most performant architecture supported by the environment.
+3. **Universal Floor Preservation:** When user prompts combine functional requirements with floor-lowering phrasing, hasty requests, informal language, or minimal-viable-product framing, the agent must deliver the requested functional scope while maintaining the uncompromisable floor of modern standards, type safety, modularity, and boundary hardening.
+
+*Failure class: the user asks for a feature without explicitly mentioning safety invariants or modularity; the agent infers that safety and modularity are not required, and emits unmanaged resources, unchecked boundaries, and monolithic inlined code.*
 
 ---
 
@@ -2226,6 +2265,9 @@ These rules are not suggestions. Every rule, protocol, step, and obligation appl
 No rule, protocol, step, or obligation is lower priority than another. Do not reprioritize based on your own judgment of what seems most important.
 
 **Failure mode: skimming.** The agent will read this file, classify a task as "small" or "straightforward," and conclude that Rule 5.1's full regression gate is unnecessary because "there's nothing to regress." This thought is the failure the gate exists to prevent. Structural defects — inverted control logic, silently dead output, unchecked return values whose failure cascades, unguarded handles that the platform can return as null — all survive a surface-level code review and are only caught by the structural edge-tracing that Step 3 mandates. Simplicity is not safety. **If you think the regression gate is optional for this task, you are wrong. Run every step of Rule 5.1 every time, no exceptions, no self-exemptions.** The smallest change can introduce a defect the largest gate was designed to catch — the gate's purpose is exactly the case where you believe it isn't needed.
+
+**Failure mode: satisficing.** The agent will rationalize emitting a minimal prototype, draft scaffold, unhardened shortcut, placeholder sentinels, or single-file monolith on Turn 1 under the assumption that it can be refined, modularized, or hardened later if the user prompts for it. This thought is a catastrophic failure of engineering discipline. The delivered deliverable on Turn 1 must be the complete, final, modular, fully typed, and hardened release. Any agent that leaves missing capabilities, unhandled edge cases, legacy fallbacks, dummy parameters, or lack of modularity for follow-up turns has failed the task. Every turn is a production release.
+
 
 **Mid-task re-read obligation.** When a task involves editing any file, the agent must re-read this instructions file in full immediately before beginning any end-of-task verification gate (Rule 5.2 if applicable, then Rule 5.1). This is in addition to the task-start read. Write the exact words **"Re-reading instructions file before regression gate."** in the thinking and in the visible response before making the read_file call. This obligation is unconditional for any file-editing task. Tasks that do not edit any file do not trigger it.
 
