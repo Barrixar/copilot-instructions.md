@@ -196,10 +196,10 @@ The mandatory behavior:
 
 ### Rule 0.58 addendum — Anti-Satisficing & Absolute Line-1 Production Invariant
 
-The default tendency of language models is "satisficing" — generating a minimally functional baseline, prototype, draft, or unhardened scaffold as quickly as possible, defaulting to familiar boilerplate and pre-standard or legacy idioms, and treating cutting-edge standards, advanced quality bars, platform hardening, or security invariants as optional refinements to be layered on later if prompted. This behavior is strictly forbidden and constitutes a fundamental protocol violation.
+The default tendency of language models is "satisficing" — generating a minimally functional baseline, prototype, draft, or unhardened scaffold as quickly as possible, defaulting to familiar boilerplate and pre-standard or legacy idioms, and treating cutting-edge standards, advanced quality bars, platform hardening, multi-tier computational models, or security invariants as optional refinements to be layered on later if prompted. This behavior is strictly forbidden and constitutes a fundamental protocol violation.
 
 The mandatory Line-1 Production Invariant:
-1. **Zero Draft, Scaffold, or Prototype Authoring:** Every file, function, module, component, type, data structure, or algorithm authored must be generated in its final, hardened, fully standards-compliant, and fully type-safe form from the very first line of code written. Emitting code that relies on legacy idioms, raw unmanaged resources, out-of-band status codes, sentinel values, unbuffered I/O, or pre-standard facilities with the internal plan of "refining or fixing it later" is forbidden.
+1. **Zero Draft, Scaffold, or Prototype Authoring:** Every file, function, module, component, type, data structure, or algorithm authored must be generated in its final, hardened, fully standards-compliant, and fully type-safe form from the very first line of code written. Emitting code that relies on legacy idioms, raw unmanaged resources, out-of-band status codes, sentinel values, unbuffered I/O, simplified single-tier shortcuts, or pre-standard facilities with the internal plan of "refining or fixing it later" is forbidden.
 2. **Immediate Full-Standard Completeness:** When a language standard edition, platform specification, framework version, or architectural tier is specified by the user or defined in the project, every modern facility, type-safe abstraction, compile-time validation mechanism, and standard capability provided by that standard must be incorporated into the initial implementation pass. Reverting to pre-standard, deprecated, or legacy idioms when the target standard provides a modern, safer, or more expressive facility is strictly prohibited.
 3. **No Compromise on Initial Emission:** The first emission of code in any session is the released product. It must pass all compiler and linter diagnostics at their maximum strictness settings, all static analysis checks, and all safety/hardening invariants unconditionally on turn 1 without requiring subsequent prompts or corrections.
 4. **No Loophole for Minor or Localized Edits:** Anti-satisficing applies unconditionally across all tasks producing code, configuration, or documentation changes. An agent may not self-exempt from the standard sweep or pre-write matrix on the basis that a change is "small", "a patch", "a simple fix", or "an incremental step".
@@ -264,18 +264,20 @@ The agent must never operate under the assumption that quality, security hardeni
 
 ### Rule 0.58 eighth addendum — Absolute Function-Level Idiom Exhaustion & Prohibition of Macro-Only Modernization
 
-Macro-level standard adoption with micro-level legacy fallback is strictly prohibited. An agent must never satisfy a language standard, platform tier, or framework edition mandate by wrapping high-level architecture in modern types and interfaces while permitting internal helper functions, private methods, local loops, buffer manipulations, mathematical computations, or casting operations to fall back on pre-standard or legacy idioms.
+Macro-level standard adoption with micro-level legacy fallback is strictly prohibited. An agent must never satisfy a language standard, platform tier, or framework edition mandate by configuring high-level compiler flags or wrapping high-level architecture in modern types and interfaces while permitting internal helper functions, private methods, local loops, buffer manipulations, mathematical computations, or casting operations to fall back on pre-standard or legacy idioms.
 
 The mandatory behavior:
 1. **Pervasive Fine-Grained Modernization:** Every statement, loop construct, branch, buffer view, container manipulation, type conversion, and calculation within every private helper, utility routine, or local scope must use the target standard edition's most cutting-edge, idiomatic, type-safe, and expressive constructs.
-2. **Zero Legacy Drift in Subordinate Logic:** Utility routines, serialization/deserialization handlers, mathematical helpers, and internal algorithms are held to the exact same standard as public interfaces. Treating internal helper logic as low-priority or exempt from modern idioms is a direct protocol violation.
+2. **Zero Legacy Drift in Subordinate Logic:** Subordinate utility routines, serialization/deserialization handlers, mathematical helpers, and internal algorithms are held to the exact same standard as public interfaces. Treating internal helper logic as low-priority or exempt from modern idioms is a direct protocol violation.
 3. **Exhaustive Pre-Authoring Mapping:** Before writing any function or helper, identify every iteration, transformation, projection, slice, conversion, and comparison within that function and map it directly to the target standard's most modern standard facility.
+4. **Standard-Mixing Prohibition:** Authoring code under modern language standards or strict compiler flags while employing pre-standard constructs (such as manual index-based iteration where declarative standard range views exist, C-style casts, unmanaged raw pointer arithmetic, or untyped buffer indexing) constitutes standard-mixing and is a critical defect.
+5. **Universal Class Invariant & Anti-Evasion Invariant:** The absence of an explicit enumeration of any specific language syntax, standard library function, or compiler flag in this document does NOT permit the use of pre-standard or legacy constructs. Whenever the target standard provides a modern, safer, or more expressive idiom for any operation, its use is mandatory across 100% of statements.
 
 *Failure class: the agent builds a modern high-level interface but populates internal helper routines with pre-standard loops, raw indexing, or unchecked conversions, creating a codebase of mixed quality.*
 
 ### Rule 0.58 ninth addendum — Toolchain Acceptance Is Not Standards Compliance (The Negative Inference Audit)
 
-A clean build, successful compilation, or zero diagnostic warnings from compiler, linter, or interpreter tools is a necessary baseline for syntactic validity, but is NEVER evidence of idiomatic standards compliance or adherence to user constraints. Toolchains routinely accept decades-old legacy idioms inside modern standard modes.
+A clean build, successful compilation, or zero diagnostic warnings from compiler, linter, or interpreter tools is a necessary baseline for syntactic validity, but is NEVER evidence of idiomatic standards compliance or adherence to user constraints. Toolchains routinely accept decades-old legacy idioms inside modern standard modes for backward compatibility.
 
 The mandatory behavior:
 1. **Independent Idiom Verification:** The agent must never cite a clean toolchain run as proof that legacy or pre-standard constructs were avoided.
@@ -325,6 +327,16 @@ The mandatory behavior:
 4. **Universal Negative Inference Prohibition:** An agent must never cite clean behavior under nominal default conditions as evidence of general correctness. A transformation pipeline is only proven correct when mathematically verified across non-nominal runtime variations.
 
 *Failure class: the agent tests transformation logic only at nominal 1:1 scale where defects are mathematically masked, shipping code that breaks, clips, or misaligns when executed on systems with fractional scaling or non-standard display metrics.*
+
+### Rule 0.58 thirteenth addendum — Anti-Satisficing Pre-Authoring Checklist & Prohibition of Minimum Viable Scaffolds
+
+Language models naturally gravitate toward the shortest path to a superficially functional artifact (the MVP satisficing attractor). This addendum establishes an ironclad operational barrier against that failure mode.
+
+The mandatory behavior:
+1. **Pre-Authoring Exhaustion Audit:** Before emitting the first line of code, the agent must check every requested subsystem, peripheral capability, presentation polish element, host environment integration, and edge-case mitigation into the Pre-Write Requirement Matrix. If any requirement from the prompt or standard is omitted from the matrix under the rationalization of "scaffolding first and adding later", authoring must halt immediately and the matrix must be expanded.
+2. **Prohibition of Multi-Turn Compliance Cycles:** The delivered deliverable on Turn 1 must be the complete, final, production release. An agent that relies on the user to prompt for missing features, perform compliance audits, or request standard adherence has failed the task.
+3. **Zero Partial-Implementation Delivery:** Every subsystem promised by the architecture (computational core, state simulation, procedural generation, presentation pipeline, input/event dispatch, external host integration) must be fully implemented with all specified capabilities in the initial release. Emitting stubbed functions, single-tier shortcuts, unhardened fallbacks, or unstyled baselines is a protocol violation.
+4. **Prohibition of Example-List Evasion:** The enumeration of any category, paradigm, or failure class in this document or in user prompts is illustrative of the general class, NOT an exhaustive closed set. An agent must never argue or reason that an unhardened, pre-standard, or satisficed construct is permissible because its exact syntax, identifier, or subtype was not explicitly listed. Any operation that fails to use the target standard's highest-tier, most type-safe, most robust, and most idiomatic facility is a defect.
 
 ---
 
