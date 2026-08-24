@@ -634,6 +634,117 @@ The mandatory behavior:
 
 *Failure class: the agent overrides min/max tracking metrics in an event handler without invoking the default platform message procedure first, resulting in uninitialized window frame calculations and incorrect positioning.*
 
+### Rule 0.58 thirty-ninth addendum — Declarative Monadic Pipeline Composition & Fallible Operation Invariant
+
+When modern algebraic, monadic, or fallible result abstractions are supported by the target language standard or runtime environment, utilizing them as passive status wrappers consumed via cascading procedural guard statements (imperative unwrapping ladders) is strictly prohibited.
+
+The mandatory behavior:
+1. **Declarative Monadic Composition:** Sequential multi-stage initialization, resource allocation pipelines, and fallible subsystem workflows must be composed as unified declarative monadic chains using functional composition combinators across both success and failure propagation paths, binding success paths and propagating failure modes through functional composition.
+2. **Fail-Closed Linear Propagation:** Multi-step setup operations must express dependencies through linear monadic pipelines where failure at any intermediate stage short-circuits execution deterministically without leaving partially initialized subsystem state.
+3. **Error Transformation & Value Mapping:** Subsystem boundary crossings must transform domain errors and convert result payloads using dedicated monadic mapping combinators rather than manual imperative unwrapping and re-wrapping.
+4. **Universal Class Invariant & Anti-Evasion Invariant:** The absence of specific named syntax or method names in this document does not permit procedural unwrapping ladders. Whenever the platform or standard provides declarative monadic composition combinators for result types, their use is mandatory across 100% of fallible sequential workflows.
+
+*Failure class: the agent uses a modern result type as a function return value but immediately unwraps it with legacy imperative guard statements at every step, creating verbose, disjointed procedural ladders that obscure failure propagation and bypass declarative functional composition.*
+
+### Rule 0.58 fortieth addendum — Toolchain Permissiveness Separation & Mandatory Negative Inference Sweeps
+
+A clean compilation, zero compiler warnings, or linter approval under modern standard flags is a baseline for syntactic validity, but is NEVER evidence of idiomatic standard modernness or user constraint satisfaction. Compilers and toolchains routinely permit decades-old legacy syntax and pre-standard idioms for backward compatibility without emitting diagnostics.
+
+The mandatory behavior:
+1. **Elimination of the Compiler Oracle Fallacy:** The agent must never cite a clean toolchain exit code, absence of compiler warnings, or linter acceptance as proof that pre-standard or legacy idioms have been eliminated.
+2. **Comprehensive Statement-by-Statement Negative Inference Scan:** Before completing any authoring or refactoring turn, the agent must execute an active negative-inference sweep across 100% of statements on disk, hunting universally for any construct, idiom, conversion, buffer access, iteration pattern, control flow branch, dummy fallback, or memory operation where the target standard or runtime provides a modern, safer, more expressive, or strongly-typed alternative.
+3. **Pre-Emission Remediation:** Every pre-standard idiom or legacy construct identified during the negative inference scan must be replaced with the target standard's cutting-edge equivalent prior to response delivery.
+4. **Universal Anti-Loophole Invariant:** The absence of an explicit mention of a specific syntax or legacy pattern in this document does not exempt any statement from this audit. If the target standard or runtime provides a modern, safer, or more expressive facility, using a legacy construct is a defect.
+
+*Failure class: the agent compiles code under the latest standard flag with zero warnings and concludes the codebase is fully modernized, failing to detect that private helper routines and computational loops are populated with legacy calls and pre-standard conversions that the compiler silently accepted.*
+
+### Rule 0.58 forty-first addendum — Declarative Range View Composition & Elimination of Imperative Control Flow
+
+Implementing classical imperative loop counters, manual buffer index tracking, or in-loop predicate branching where modern declarative range view pipelines, lazy sequence generators, structured-binding view adapters, and standard range transformation algorithms exist is strictly prohibited.
+
+The mandatory behavior:
+1. **Lazy Sequence Generation Factories:** Bounded sequence loops, discrete stepping routines, and iterative generators must utilize lazy range factories rather than classical integer counter iteration loops.
+2. **Structured-Binding View Adapters:** Iterating over sequential collections or buffers with manual index arithmetic or offset dereferencing must utilize structured-binding view adapters directly over typed memory spans, binding index and element simultaneously.
+3. **Predicate-Coupled View Composition:** In-loop filter branching must be replaced by composable declarative range filter pipelines that decouple filtering logic from loop execution.
+4. **Standard Range Algorithm Replacement:** Collection-level clearing, filling, element searching, and transformations must utilize standard range algorithms over manual iteration loops.
+5. **Zero-Allocation Projection Pipelines:** Intermediate collection allocations for element transformation or extraction must be eliminated by composing lazy declarative range projection views.
+6. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies across all data transformation pipelines, collection manipulations, state processing loops, and event processors. No agent may reason around this constraint by claiming manual loops are simpler or performant when the target standard provides zero-overhead range abstractions.
+
+*Failure class: the agent writes imperative for-loops with manual index arithmetic and early-exit continue branches inside core algorithms, bypassing zero-overhead declarative range pipelines and standard range transformations.*
+
+### Rule 0.58 forty-second addendum — Zero Low-Level Raw Memory Copying & Strongly-Typed Memory Span Invariant
+
+Relying on legacy unmanaged memory copying functions, raw void pointer arithmetic, or unchecked byte buffers for binary serialization, structured payload packaging, or buffer manipulation is strictly prohibited when the target language or standard provides type-safe memory spans and structured view abstractions.
+
+The mandatory behavior:
+1. **Zero Unmanaged Memory Copying:** All memory viewing, buffer parsing, structured header packaging, and binary serialization must use strongly-typed, bounds-checked memory span abstractions and standard range copy algorithms.
+2. **Compile-Time Sized Byte Projections:** Structured data serialization must project objects into type-safe byte views with compile-time literal sizing rather than raw unmanaged pointer casts and manual size arithmetic.
+3. **Bounds-Checked Span Wrapping:** Procedural data synthesis, streaming buffers, and payload generators must wrap raw memory in typed span views immediately upon acquisition, enforcing bounds checking across all subsequent operations.
+4. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies across all serialization engines, protocol parsers, streaming pipelines, file format encoders, and hardware buffer interfaces. The absence of a specific buffer type in this document does not permit raw unmanaged memory copying.
+
+*Failure class: the agent authors binary serialization using sequential low-level byte copying calls and manual pointer offsets, introducing memory safety hazards and bypassing type-safe range views.*
+
+### Rule 0.58 forty-third addendum — Asynchronous Boundary Memory Ownership, Buffer Pinning & Move Elimination Invariant (Anti-UAF)
+
+Permitting move construction, move assignment, copy operations, or buffer reallocation on host container classes whose internal memory buffers are referenced asynchronously by external platform APIs, operating system routines, background execution threads, or hardware channels without cloning is strictly prohibited.
+
+The mandatory behavior:
+1. **Strict Non-Movable Asynchronous Host Invariant:** When an asynchronous platform API, kernel routine, or background worker borrows host memory pointers without creating an internal isolated heap clone, the host container must be made explicitly non-movable and non-copyable. Moving or transferring ownership of a host container while an asynchronous execution context is actively reading or writing memory invalidates buffer pointers, resets container state, and causes critical Use-After-Free (CWE-416) memory corruption.
+2. **Buffer Address Stability & Reallocation Prohibition:** Modifying buffer capacity, triggering dynamic array reallocations, or mutating internal buffer pointers while an asynchronous operation is in flight is strictly prohibited. Memory addresses loaned to external asynchronous contexts must remain strictly pinned and stable throughout the execution lifespan.
+3. **Synchronous Teardown & In-Flight Operation Drain:** Destructors, reset methods, and state-clearing routines of asynchronous host containers must synchronously cancel, drain, and flush all in-flight asynchronous operations before releasing, resetting, or reallocating underlying memory buffers.
+4. **Lifecycle State Transition Cancellation:** State machine resets, operational suspension transitions, channel silencing, and mode shifts must explicitly cancel or stop active asynchronous operations before modifying dependent state.
+5. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies across all asynchronous execution contexts, background worker pools, non-blocking I/O channels, and hardware transfer queues. Defaulting move operations on any container whose memory is borrowed across an asynchronous boundary is a critical defect.
+
+*Failure class: the agent leaves move operations enabled on a container whose buffers are actively referenced by an asynchronous background worker, allowing instances to be moved or destroyed while background threads are reading, causing memory corruption and intermittent application crashes.*
+
+### Rule 0.58 forty-fourth addendum — Structural Dependency Coupling & Single-Source Constant Binding Invariant
+
+Authoring data structures, entity models, domain schemas, or subsystem state definitions with decoupled, hardcoded literal values that duplicate centralized constants is strictly prohibited.
+
+The mandatory behavior:
+1. **Physical Dependency Coupling:** Every module, interface definition, or compilation unit declaring entity properties, bounding dimensions, physical limits, or default parameters must enforce an explicit physical dependency (direct import or inclusion) on the single authoritative constant source.
+2. **Identifier-Bound Default Member Initializers:** All struct and class field default member initializers must be directly bound to authoritative constant identifiers. Reconstructing baseline parameters from mental memory or duplicate literal numbers is a critical defect that induces silent cross-module parameter drift.
+3. **Single Source of Truth Definition:** All domain metrics, dimensions, physical thresholds, and default configuration values must be declared in exactly one authoritative location, completely prohibiting duplicate literal definitions across headers.
+4. **Compile-Time Equivalence Enforcement:** In architectures where physical header inclusion is prevented by modular isolation or language decoupling, static compile-time assertions must be enforced to guarantee mathematical equality against the canonical source.
+5. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies across all domain models, state schemas, configuration modules, protocol specifications, and coordinate systems. No entity definition may declare standalone default numbers when a centralized constants module exists.
+
+*Failure class: the agent declares entity structures in an isolated module with hardcoded literal defaults instead of importing the constants module, causing entity parameters to silently diverge from domain constants during iterative development.*
+
+### Rule 0.58 forty-fifth addendum — Universal Exhaustive Branching & Unreachable Contract Annotation Invariant
+
+Returning defensive dummy fallback values, placeholder strings, or dummy error codes in default branches of exhaustive pattern-matching constructs, switch statements, or variant visitors where all valid domain states are explicitly handled is strictly prohibited.
+
+The mandatory behavior:
+1. **Standard Unreachable Contract Annotation:** When pattern matching, switch statements, or variant visitors cover 100% of valid domain states or enumeration cases, the terminal default branch must be annotated with the target language standard's explicit unreachable contract facility rather than returning dummy fallback values.
+2. **Elimination of Fallback Masking:** Returning dummy fallback values suppresses compiler dead-code optimizations, misleads runtime verification, and silently masks the addition of unhandled enum variants or domain states during subsequent development.
+3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies across all finite state machines, enumeration decoders, event dispatchers, and polymorphic variant visitors. No agent may insert dummy fallback returns in place of standard unreachable state annotations.
+
+*Failure class: the agent writes dummy fallback return statements in an exhaustive switch over all enum variants, preventing compiler optimization and masking unhandled states.*
+
+### Rule 0.58 forty-sixth addendum — Universal Standard Library Atomic Utility & Subordinate Transformation Invariant
+
+Implementing manual multi-line variable swapping, ad-hoc string conversions, or raw scalar casts where standard library atomic utilities, type-safe formatting engines, or standard underlying value extraction facilities exist is strictly prohibited.
+
+The mandatory behavior:
+1. **Atomic State & Resource Exchange:** Manual temporary-variable swapping routines for handle release, pointer resetting, or state handoff must be replaced by standard library exchange utilities that perform atomic replacement and return the previous value in a single operation.
+2. **Type-Safe Structured Formatting:** Legacy string conversion utilities and unbuffered string streams must be replaced by the target standard's type-safe, locale-independent, compile-time-checked structured formatting facilities.
+3. **Standard Underlying Enum Value Extraction:** Raw scalar casts for strongly-typed scoped enumeration values must be replaced by standard underlying value extraction utilities.
+4. **Universal Class Invariant & Anti-Evasion Invariant:** Subordinate utility routines are held to the exact same standard of idiomatic modernization as top-level interfaces. The absence of an explicit mention of a specific utility function does not permit pre-standard boilerplate.
+
+*Failure class: the agent writes a multi-line temporary variable swap to release a handle or uses legacy string conversion functions, bypassing modern standard library utility facilities.*
+
+### Rule 0.58 forty-seventh addendum — Auxiliary Subsystem Standard Parity & Cognitive Focus Invariant
+
+Selectively applying modern language standards, architectural patterns, and type-safety guarantees to primary high-traffic execution paths while leaving auxiliary background modules, procedural synthesis helpers, logging routines, or cache reset mechanisms in pre-standard or legacy boilerplate is strictly prohibited.
+
+The mandatory behavior:
+1. **Absolute Whole-Codebase Standard Parity:** Every translation unit, subordinate helper, procedural generator, cache reset function, and internal data structure across the entire codebase must be authored with 100% standard parity with core execution loops.
+2. **Auxiliary Subsystem Scrutiny:** Subordinate background utility modules, state reset routines, worker queues, procedural data generators, and diagnostics formatters must receive identical modernization scrutiny, negative-inference sweeps, and type-safety validation as primary execution interfaces.
+3. **Elimination of Cognitive Visibility Bias:** The agent must never prioritize visible primary execution paths while treating subordinate background modules as disposable prototypes or low-rigor scaffolds.
+4. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies across all software tiers, background workers, auxiliary utilities, and subsystem modules without exception.
+
+*Failure class: the agent modernizes the primary application loop and main subsystem to the latest standard but leaves auxiliary data generators and internal buffer clear routines in legacy pre-standard loops, creating a codebase of fractured quality.*
+
 ---
 
 ## Rule 0.59 - Code-state claims require a fresh read
