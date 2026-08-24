@@ -295,13 +295,13 @@ The mandatory behavior:
 Domain-specific robustness invariants must be built into the architecture on Day 1 (Turn 1), not discovered as edge cases or added only upon user prompting.
 
 The mandatory behavior across universal software domains:
-1. **Continuous State & Dynamic Movement Domain (Sub-Stepped Temporal Integration):**
+1. **Continuous State Evolution & Numerical Integration Domain (Sub-Stepped Temporal Integration):**
    - Single-step frame-delta integration is prohibited for high-velocity or rapidly changing state variables.
-   - Any continuous simulation, dynamic motion system, or rapid state transition model must implement multi-sub-step integration on line 1, sizing sub-step intervals such that maximum state displacement per sub-step is strictly smaller than the bounding threshold of obstacle, boundary, or interaction zones, mathematically eliminating state tunneling, boundary breaches, and missed collision events.
-2. **Interactive UI, Input & Lifecycle Domain (Interruption & Focus Defense):**
+   - Any continuous simulation, numerical integration system, or rapid state transition model must implement multi-sub-step integration on line 1, sizing sub-step intervals such that maximum state displacement per sub-step is strictly smaller than the bounding threshold of state transitions, boundaries, or interaction zones, mathematically eliminating state tunneling, boundary breaches, and missed transition events.
+2. **Interactive Ingestion, Session & Lifecycle Domain (Interruption & Boundary Defense):**
    - Unchecked or stateful input polling without active context verification is prohibited.
-   - Every event dispatcher, window loop, and message processor must implement explicit defensive handlers for context loss, blur, focus shifts, activation changes, and lifecycle interruptions that immediately and deterministically reset and clear all transient input queues, active button/key states, and in-flight operations to prevent frozen controls or stuck states upon task switching.
-3. **Structured Buffer & Asset Processing Domain (Zero-Allocation Typed Views):**
+   - Every event dispatcher, session loop, and message processor must implement explicit defensive handlers for context loss, focus shifts, activation changes, and lifecycle interruptions that immediately and deterministically reset and clear all transient input queues, active input states, and in-flight operations to prevent frozen states or persistent intent vectors upon session or boundary transitions.
+3. **Structured Buffer & Payload Processing Domain (Zero-Allocation Typed Views):**
    - Binary buffer parsing, procedural synthesis, and structured I/O must enforce compile-time structural validation, aligned strongly-typed viewing abstractions, and strictly bounds-checked sub-view operations with zero raw unaligned pointer manipulation.
 
 ### Rule 0.58 eleventh addendum — Mandatory Multi-Stage Pipeline Composition & Dimensional Unit Rigor
@@ -310,11 +310,11 @@ Conflating distinct coordinate domains, measurement units, or dimensional spaces
 
 The mandatory behavior:
 1. **Universal Dimensional Analysis & Unit Boundary Enforcement:** Every boundary crossing between distinct measurement spaces or reference frames must enforce explicit, strongly-typed, or mathematically validated unit conversions. Treating two different measurement spaces as interchangeable because they share the same primitive scalar representation is a direct protocol violation.
-2. **Composite Pipeline Composition Tracing:** Multi-tier transformation, conversion, or serialization pipelines where an intermediate transformation stage is audited in isolation and assumed to be terminal are strictly prohibited. The agent must trace the complete composite transformation sequence ($T_{\text{total}} = T_n \circ \dots \circ T_1$), explicitly accounting for all downstream transformations, runtime framework scalings, driver virtualizations, and host environment rasterizations.
+2. **Composite Pipeline Composition Tracing:** Multi-tier transformation, conversion, or serialization pipelines where an intermediate transformation stage is audited in isolation and assumed to be terminal are strictly prohibited. The agent must trace the complete composite transformation sequence ($T_{\text{total}} = T_n \circ \dots \circ T_1$), explicitly accounting for all downstream transformations, runtime framework scalings, driver virtualizations, and host environment transformations.
 3. **End-to-End Consumer Compatibility:** The output domain of each pipeline stage must mathematically match the exact expected input domain of the subsequent consumer stage.
 4. **Universal Class Invariant & Anti-Evasion Invariant:** The absence of an explicit enumeration of any specific coordinate domain, measurement unit, or serialization format does NOT permit the unvalidated interchange of primitive scalars across boundaries. If two components operate in different reference frames, explicit unit conversion is mandatory.
 
-*Failure class: the agent transforms domain coordinates to an intermediate canvas space and assumes the result maps directly to device output, failing to account for downstream runtime scaling and producing double-scaled, clipped, or distorted output.*
+*Failure class: the agent transforms domain coordinates to an intermediate reference space and assumes the result maps directly to destination output, failing to account for downstream runtime scaling and producing double-scaled, clipped, or distorted output.*
 
 ### Rule 0.58 twelfth addendum — Prohibition of Nominal-Environment Assumptions & Non-Nominal Verification Invariant
 
@@ -326,7 +326,7 @@ The mandatory behavior:
 3. **Non-Nominal State Verification:** Verification, testing, and static simulation must explicitly trace behavior under non-nominal, fractional, and transformed environmental states rather than verifying only nominal standard baselines.
 4. **Universal Negative Inference Prohibition:** An agent must never cite clean behavior under nominal default conditions as evidence of general correctness. A transformation pipeline is only proven correct when mathematically verified across non-nominal runtime variations.
 
-*Failure class: the agent tests transformation logic only at nominal 1:1 scale where defects are mathematically masked, shipping code that breaks, clips, or misaligns when executed on systems with fractional scaling or non-standard display metrics.*
+*Failure class: the agent tests transformation logic only at nominal 1:1 scale where defects are mathematically masked, shipping code that breaks, clips, or misaligns when executed on systems with fractional scaling or non-standard environment metrics.*
 
 ### Rule 0.58 thirteenth addendum — Anti-Satisficing Pre-Authoring Checklist & Prohibition of Minimum Viable Scaffolds
 
@@ -947,7 +947,7 @@ The steps below must each be executed in full and reported separately. Each step
    - **Unfinalized resource handle (allocate/finalize lifecycle gap):** For every resource-creating API call added or modified — any function named `Create*`, `Open*`, `Generate*`, `Allocate*` that returns a handle through an output parameter — confirm by reading code that a matching finalization call (`*Finalize*`, `*Initialize*`, `*Commit*`, `*Ready*`, `*Complete*`) on the returned handle executes before the handle is passed to any usage function. A non-null handle that was never finalized passes null checks but is internally unusable; every call in the chain succeeds individually, so static reasoning cannot detect the gap. Grep for each creation call in the modified function, then grep for the corresponding finalize — if none found, read the creation function's documentation. See "Stateful API lifecycle" under Rule 2 and item F in the Rule 5 post-edit checklist.
    - **Generated derivation cycle and intermediate-layer verification:** If the project's build bakes build-time-derived values into outputs and the change touches code, data, or configuration that such a build consumes — and can therefore alter the baked values — or builds such outputs (sizes, offsets, hashes, addresses, or any value derived from another output or from the output that embeds it), confirm every affected output was built to a fixpoint and that each such value was verified at the consumer layer (the bytes compiled into the shipped output), not only in regenerated intermediates. State the build order, the artifact modification times, and the consumer-layer comparison (Rule 41). If the project bakes no such values or the change touches nothing such a build consumes, state that determination and skip the rest of this check.
    - **Design-stage change safeguards (Rule 2A):** check every change against the Rule 2A failure classes — recovery-path removal or weakening without replacement analysis, readiness-signal publication order, fixed-size bound creation or growth without enforcement, re-enabling a disabled mechanism without its compensating control, inert multi-part integration presented as complete, a mechanism presented as providing a property that was never verified to hold, a mechanism whose state space was not enumerated with every state's verdict classified (2A.7), a failure path whose legitimate triggers were not enumerated before its abort semantics were chosen (2A.8), a hardening that did not audit the mechanism's silent sibling failure modes (2A.9), and a redesign whose new obligations — resource release on every path, state publication, scope and lifetime — were not audited from the new code (2A.10). Each must be confirmed absent or explicitly addressed, and a tool result may not be cited as verification unless the tool parsed the unit under change (Rule 5).
-   - **Failure-class sweep (Rules 16-41):** for every change, check the surrounding-system consult (16), snapshot-point finality (17), legitimate-state reachability (18), check-availability skip paths (19), observable-contract preservation (20), cross-artifact consistency (21), symbol-namespace collisions (22), sibling-path coverage (23), plan traceability (24), runtime-dependence disclosure (25), tampered-metadata fault isolation (26), platform-width definedness (27), masked-findings and baseline-required review (28), the Rule 29 failure-class catalogue, and the verdict-level classes (30-40): verdict data-dependence (30), external-value verification (31), self-test oracle integrity (32), fail-closed default and degraded states (33), enforced behavioral claims (34), availability-gate proportionality (35), abort-path reachability and classification (36), fault-handler confinement (37), no-throw fault-tolerant paths (38), runtime bidirectional exercise (39), and codebase side-by-side comparison with severity-tier assessment (40). Each must be confirmed absent or explicitly addressed, with the Rule 5 tool-parse condition applied.
+   - **Failure-class sweep (Rules 16-46):** for every change, check the surrounding-system consult (16), snapshot-point finality (17), legitimate-state reachability (18), check-availability skip paths (19), observable-contract preservation (20), cross-artifact consistency (21), symbol-namespace collisions (22), sibling-path coverage (23), plan traceability (24), runtime-dependence disclosure (25), tampered-metadata fault isolation (26), platform-width definedness (27), masked-findings and baseline-required review (28), the Rule 29 failure-class catalogue, and the verdict-level classes (30-46): verdict data-dependence (30), external-value verification (31), self-test oracle integrity (32), fail-closed default and degraded states (33), enforced behavioral claims (34), availability-gate proportionality (35), abort-path reachability and classification (36), fault-handler confinement (37), no-throw fault-tolerant paths (38), runtime bidirectional exercise (39), codebase side-by-side comparison with severity-tier assessment (40), generated derivation cycle fixpoint (41), lifecycle temporal decoupling (42), parameter neutralization avoidance (43), closed-loop pipeline traceability (44), symbolic value-flow trace analysis (45), and stimulus-response correctness verification (46). Each must be confirmed absent or explicitly addressed, with the Rule 5 tool-parse condition applied.
 
 2. **Goal check (Rule 8):** Re-examine every change made during the current task against all four Rule 8 confirmations — not only the last change, and not only one of the four confirmations. Each change may be individually correct yet combine with another to produce a conflict that is only visible at the task level. This re-examination is the only pass that sees the aggregate. Confirm the change achieves its goal in the optimal, most correct, most secure, and most performant way. The four confirmations mandated by Rule 8 must be explicitly written out in this step's report; citing Rule 8 or claiming it was already checked without reproducing its required written statements is a protocol violation. Performance matters and must be evaluated explicitly, not assumed acceptable.
 
@@ -1734,6 +1734,81 @@ Any build-time or offline checker that is cited as verification has the same thr
 3. **Reachability of failure.** Construct the broken state the checker exists to detect (for a cross-artifact pair: build the producer after the consumer, or change one baked value) and confirm the checker reports it.
 
 A checker that passes on the broken pair is a false oracle and must not be cited as verification; the pair is unverified until a consumer-layer comparison exists.
+
+---
+
+## Rule 42 — Separation of event ingestion lifecycles from continuous temporal evolution
+
+In any architecture that processes discrete asynchronous external stimuli, messages, or event signals and maintains continuous or evolving state across time:
+
+1. **Discrete Ingestion Independence:** Discrete event ingestion routines must solely parse, validate, and buffer intent vectors or state transitions. They must never directly invoke continuous, rate-dependent, or time-integrated state evolution routines using synthetic, dummy, or zero time deltas ($\Delta t = 0$).
+2. **Synchronous Simulation Authority:** State variable evolution that is a function of elapsed time ($x_{t+\Delta t} = x_t + \dot{x}\Delta t$) must execute strictly on the authoritative simulation clock or update tick where real elapsed $\Delta t > 0$ is measured and integrated.
+3. **State Buffering Invariant:** Passing transient event data into continuous systems requires persistent or cached state buffering such that the continuous simulation clock consumes the active intention vector across all subsequent temporal integration steps until explicitly released, transitioned, or cleared.
+4. **Universal Anti-Evasion Invariant:** An agent must never evade this rule by arguing that passing a zero time delta, null duration, or synthetic evolution invocation from an event handler is harmless or handled gracefully by callee clamping. Invoking time-integrated, rate-dependent, or state-evolution routines with zero or placeholder deltas from event ingestion handlers is strictly prohibited across all software architectures and domains.
+
+*Failure class: an event ingestion handler attempts to perform continuous state evolution directly upon receiving an event by calling a time-integration routine with a hardcoded zero time delta ($\Delta t = 0.0$), causing the evolution equation to evaluate to zero ($f(\Delta t = 0) \equiv 0$) and freezing the state permanently while appearing fully implemented to surface inspection.*
+
+---
+
+## Rule 43 — Prohibition of dummy literals and parameter-neutralizing placeholders
+
+Passing literal constant placeholders, default-constructed sentinels, uninitialized structures, or dummy scalar values to satisfy a function signature or call site is strictly prohibited when the target function's mathematical or logical operations depend on that parameter as a meaningful scale, multiplier, duration, capacity, or resource handle.
+
+The mandatory pre-call and post-edit audit:
+1. **Mathematical Neutralization Audit:** For every call site where a literal constant, default sentinel, or uncalculated argument is passed, inspect the callee's body. If the parameter is used as a divisor, factor, duration, time-step, or state multiplier, confirm that passing that literal does not algebraically neutralize the callee's state updates ($x + v \cdot 0 \equiv x$, $x \times 0 \equiv 0$).
+2. **Context-Derived Parameter Mandate:** Every argument passed to a function must represent a real, verified quantity derived from the caller's active operational context. If the caller does not possess the physical, dimensional, or temporal quantity required by the callee, the invocation is architecturally misplaced and must be relocated to the appropriate lifecycle stage.
+3. **Zero-Value Callee Audit:** If a callee genuinely supports a zero-value parameter as a valid edge case (such as an instantaneous query or zero-delay flush), the callee must explicitly document that behavior, and the caller must document why zero is the mathematically intended input rather than an unsupplied parameter workaround.
+4. **Universal Negative Inference Prohibition:** The absence of a specific literal value, type, or function from this document does not permit passing dummy arguments. If a parameter influences any internal rate, multiplier, dimension, capacity, timeout, or mathematical state mutation, passing an uncalculated, hardcoded, or placeholder literal is a critical defect.
+
+*Failure class: an agent passes a constant 0 or dummy scalar to a multi-parameter function to satisfy compilation; the zero flows into an internal calculation where it silently multiplies, zeroes, or bypasses the intended state mutation, rendering the routine a no-op despite compiling cleanly with zero warnings.*
+
+---
+
+## Rule 44 — End-to-end producer-consumer data pipeline traceability (the closed-loop invariant)
+
+Every data flow pipeline—from external stimulus, through intermediate state buffers and transformation engines, to downstream presentation, serialization, persistence, or transmission—must form a verified closed loop.
+
+The mandatory pipeline tracing protocol:
+1. **Identify the Producer:** Locate where external data, user intent, or sensor input is ingested and confirm it writes into an identifiable state structure or buffer.
+2. **Trace the Storage Lifetime:** Confirm the destination buffer retains the state across asynchronous boundaries and lifecycle ticks until consumed or updated.
+3. **Trace the Engine/Evolution Consumer:** Locate where the state evolution engine, computation loop, or business logic reads from that buffer and applies it to mutable domain entities across active execution ticks.
+4. **Trace the Output/Presentation Consumer:** Confirm the mutated domain entities flow directly into the final presentation, serialization, persistence, or dispatch layer.
+5. **Open-Loop Rejection:** An architecture that contains a producer and a presentation consumer but omits the periodic invocation that integrates the buffer into domain state is an open-loop defect. No pipeline may be marked complete without proving the continuous execution chain across all four stages.
+6. **Universal Anti-Evasion Invariant:** An agent must never claim that a pipeline is verified because each component's unit test or isolated interface compiles and passes. If the continuous execution wire or periodic invocation connecting the buffer to domain state evolution is absent from the integrated runtime loop, the architecture contains an open-loop defect.
+
+*Failure class: the agent implements an input/event parser that correctly records state into a buffer and an output consumer that reads domain entities, but forgets to invoke the continuous state evolution step in the active execution loop that applies the buffered intent to the domain entities, leaving the pipeline open and the system functionally disconnected while each module appears 100% complete in isolation.*
+
+---
+
+## Rule 45 — Symbolic value-flow execution trace analysis (beyond syntactic verification)
+
+Static code inspection that verifies only syntactic completeness, naming conventions, type compatibility, and structural branch coverage is insufficient to prove correctness. The agent must perform symbolic value-flow execution tracing along the data path.
+
+The mandatory symbolic trace:
+1. **Concrete Value Propagation:** Mentally and symbolically propagate concrete sample values (both nominal and non-nominal boundary states, active input vectors, positive elapsed evolution intervals, and domain extrema) through each line of the execution path.
+2. **Algebraic Identity Verification:** At each statement along the path, calculate the concrete resulting state:
+   $$\text{State}_{\text{next}} = f(\text{State}_{\text{current}}, \text{Inputs}, \Delta t)$$
+   Verify that $\text{State}_{\text{next}} \neq \text{State}_{\text{current}}$ when active stimuli are present, and that the state delta matches the physical and mathematical expectations of the specification.
+3. **Invariant Identity Detection:** If symbolic propagation reveals that $\text{State}_{\text{next}} \equiv \text{State}_{\text{current}}$ regardless of input stimuli (due to zero multipliers, dead branches, unassigned variables, or uncalled mutators), the implementation contains an invariant identity defect that must be corrected before proceeding.
+4. **Universal Symbolic Verification Mandate:** Syntactic completeness, static typing, and branch coverage never substitute for symbolic evaluation. If symbolic propagation along any active execution path yields an algebraic identity where state fails to evolve in response to stimulus, the implementation contains an invariant identity defect.
+
+*Failure class: an agent reviews a function line-by-line, confirms all variables are declared, types match, and boundary clamps exist, but fails to trace the symbolic values through the equations, missing an identity calculation that causes the function to produce no observable change in state.*
+
+---
+
+## Rule 46 — Separation of liveness/smoke stability from functional interactive correctness
+
+Verifying that a process compiles, launches, allocates memory, avoids crashes or exceptions, and responds to operating-system heartbeat queries proves **liveness and baseline stability**, but provides **zero evidence of functional interactive correctness**.
+
+The mandatory qualification standard:
+1. **The Liveness Fallacy:** An agent must never cite process survival, zero crashes, active event polling, or steady-state execution throughput as proof that interactive features, business logic, or control systems are functional. A frozen, unresponsive, or non-mutating program can easily achieve 100% loop execution stability and zero crashes while being completely broken.
+2. **Stimulus-Response Verification Requirement:** Functional correctness requires demonstrating state change in direct response to stimulus:
+   $$\text{Stimulus} \implies \Delta \text{State} \neq 0 \implies \text{Observable Output Delta}$$
+3. **Automated & Scripted Stimulus Verification:** Where headless verification is performed, the agent must endeavor to script or simulate discrete stimuli (injected stimuli, synthetic event dispatches, or simulated update cycles) and assert that internal state variables change appropriately over successive ticks.
+4. **Unexercised Functional State Disclosure:** If interactive stimuli cannot be injected in the host environment, the agent must explicitly classify the deliverable as "built and liveness-verified only; interactive stimulus-response state transitions unexercised," stating the exact untested state paths per Rule 39 and Rule 39 addendum.
+5. **Universal Anti-Evasion Invariant:** An agent must never describe an unexercised stimulus-response path as functional or complete based on process liveness or loop survival. Any deliverable whose interactive stimulus-response state transitions have not been executed and verified must be explicitly classified as built and unverified per Rule 39.
+
+*Failure class: the agent compiles an interactive or reactive software system, runs it in a background process, verifies that the process is alive, polling events, and cycling without crashing, and concludes the application is fully functional, without having verified whether applying external stimuli actually produces state mutation or observable downstream output.*
 
 ---
 
