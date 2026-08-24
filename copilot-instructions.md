@@ -302,7 +302,29 @@ The mandatory behavior across universal software domains:
 3. **Structured Buffer & Asset Processing Domain (Zero-Allocation Typed Views):**
    - Binary buffer parsing, procedural synthesis, and structured I/O must enforce compile-time structural validation, aligned strongly-typed viewing abstractions, and strictly bounds-checked sub-view operations with zero raw unaligned pointer manipulation.
 
-*Failure class: the agent ships an implementation where fast-moving state breaches boundaries due to discrete stepping, or where inputs remain permanently stuck when the application loses focus, treating core domain invariants as optional polish.*
+### Rule 0.58 eleventh addendum — Mandatory Multi-Stage Pipeline Composition & Dimensional Unit Rigor
+
+Conflating distinct coordinate domains, measurement units, or dimensional spaces across architectural boundaries is strictly prohibited. An agent must never pass data across subsystem interfaces using primitive scalar types without explicit dimensional validation, unit tagging, or formal conversion operations.
+
+The mandatory behavior:
+1. **Universal Dimensional Analysis & Unit Boundary Enforcement:** Every boundary crossing between distinct measurement spaces or reference frames must enforce explicit, strongly-typed, or mathematically validated unit conversions. Treating two different measurement spaces as interchangeable because they share the same primitive scalar representation is a direct protocol violation.
+2. **Composite Pipeline Composition Tracing:** Multi-tier transformation, conversion, or serialization pipelines where an intermediate transformation stage is audited in isolation and assumed to be terminal are strictly prohibited. The agent must trace the complete composite transformation sequence ($T_{\text{total}} = T_n \circ \dots \circ T_1$), explicitly accounting for all downstream transformations, runtime framework scalings, driver virtualizations, and host environment rasterizations.
+3. **End-to-End Consumer Compatibility:** The output domain of each pipeline stage must mathematically match the exact expected input domain of the subsequent consumer stage.
+4. **Universal Class Invariant & Anti-Evasion Invariant:** The absence of an explicit enumeration of any specific coordinate domain, measurement unit, or serialization format does NOT permit the unvalidated interchange of primitive scalars across boundaries. If two components operate in different reference frames, explicit unit conversion is mandatory.
+
+*Failure class: the agent transforms domain coordinates to an intermediate canvas space and assumes the result maps directly to device output, failing to account for downstream runtime scaling and producing double-scaled, clipped, or distorted output.*
+
+### Rule 0.58 twelfth addendum — Prohibition of Nominal-Environment Assumptions & Non-Nominal Verification Invariant
+
+Designing or verifying algorithms, layouts, buffer allocations, coordinate transformations, or timing loops under the unverified assumption of a static, nominal baseline host environment is strictly prohibited.
+
+The mandatory behavior:
+1. **Elimination of the Invariant Metric Fallacy:** Code authoring must never assume nominal unity scale factors, static environment densities, fixed aspect ratios, default alignment configurations, or integer multipliers. All presentation, geometry, timing, buffer sizing, and serialization logic must treat host environment metrics as dynamic runtime variables rather than compile-time invariants.
+2. **Mandatory Non-Nominal Parameterization:** Every layout and transformation pipeline must incorporate dynamic runtime scaling, density ratios, and geometry shifts on line 1, ensuring seamless adaptability across heterogeneous host configurations without clipping, truncation, or distortion.
+3. **Non-Nominal State Verification:** Verification, testing, and static simulation must explicitly trace behavior under non-nominal, fractional, and transformed environmental states rather than verifying only nominal standard baselines.
+4. **Universal Negative Inference Prohibition:** An agent must never cite clean behavior under nominal default conditions as evidence of general correctness. A transformation pipeline is only proven correct when mathematically verified across non-nominal runtime variations.
+
+*Failure class: the agent tests transformation logic only at nominal 1:1 scale where defects are mathematically masked, shipping code that breaks, clips, or misaligns when executed on systems with fractional scaling or non-standard display metrics.*
 
 ---
 
@@ -962,8 +984,9 @@ The mandatory behavior, as part of Step 1's analysis:
 2. **Substitute concrete values into every formula.** For every computation that maps an input to an output — a deflection, a threshold, a rate, an offset, a mapping — substitute representative inputs (the center case, the edge cases, the extremes) and state the resulting output. A formula whose output was never computed for any concrete input has not been verified.
 3. **Compare related constants for coherence.** For every pair of constants that constrain the same behavior — a speed against a speed, a limit against a limit, a rate against a duration, a size against a size — compare them and state whether the relationship produces the intended behavior. A constant verified only for being a valid value of its type is unverified.
 4. **Verify the outcome matches the purpose.** State the deliverable's intended behavior and confirm, from the traced values, that the outcome is what a user of the deliverable would expect. If the trace shows the mechanism missing, never reaching, or never triggering its intended effect, that is a defect even though every line is well-formed.
+5. **Trace non-nominal and transformed environmental states.** For every layout, geometry, buffer, timing, or transformation calculation, substitute non-nominal environmental parameters — including fractional multipliers, non-unity density ratios, and dynamic boundary shifts — and verify that the composite transformation maintains structural alignment, bounding containment, and visual/operational integrity without clipping, overflow, or distortion.
 
-A "nothing found" reached without steps 1–4 is a formal-only audit and is indistinguishable from no behavioral audit at all. This trace is static simulation, distinct from Rule 39's runtime exercise: it is required even when runtime exercise is impossible, and in addition to runtime exercise when runtime is possible. The trace must be written in the Step 1 report with its concrete values; a trace performed internally without being written is indistinguishable from no trace. The "operation" is whatever the deliverable does when used — a program's execution, a configuration's effect, a document's effect on its reader; a deliverable with no observable effect is itself the defect.
+A "nothing found" reached without steps 1–5 is a formal-only audit and is indistinguishable from no behavioral audit at all. This trace is static simulation, distinct from Rule 39's runtime exercise: it is required even when runtime exercise is impossible, and in addition to runtime exercise when runtime is possible. The trace must be written in the Step 1 report with its concrete values; a trace performed internally without being written is indistinguishable from no trace. The "operation" is whatever the deliverable does when used — a program's execution, a configuration's effect, a document's effect on its reader; a deliverable with no observable effect is itself the defect.
 
 *Failure class: the agent audits the code as a well-formed program — it compiles, it is memory-safe, bounds-checked, resource-safe — and reports "nothing found" while the deliverable fails to do what it exists to do: the threshold never triggers, the rate is imperceptible, the mapping is biased, the limit never binds, the mechanism never reaches its intended effect. Every such defect is discoverable by tracing one operation with concrete values, and every one survives a formal-only review.*
 
