@@ -273,7 +273,8 @@ The mandatory behavior:
 1. **Pervasive Fine-Grained Modernization:** Every statement, loop construct, branch, buffer view, container manipulation, type conversion, and calculation within every private helper, utility routine, or local scope must use the target standard edition's most cutting-edge, idiomatic, type-safe, and expressive constructs.
 2. **Zero Legacy Drift in Subordinate Logic:** Subordinate utility routines, serialization/deserialization handlers, mathematical helpers, and internal algorithms are held to the exact same standard as public interfaces. Treating internal helper logic as low-priority or exempt from modern idioms is a direct protocol violation.
 3. **Exhaustive Pre-Authoring Mapping:** Before writing any function or helper, identify every iteration, transformation, projection, slice, conversion, and comparison within that function and map it directly to the target standard's most modern standard facility.
-4. **Standard-Mixing Prohibition:** Authoring code under modern language standards or strict compiler flags while employing pre-standard constructs (such as manual index-based iteration where declarative standard range views exist, C-style casts, unmanaged raw pointer arithmetic, or untyped buffer indexing) constitutes standard-mixing and is a critical defect.
+4. **Standard-Mixing Prohibition:** Authoring code under modern language standards or strict compiler flags while employing pre-standard or legacy constructs across internal expressions, casting operations, manual memory manipulations, or unchecked indexing constitutes standard-mixing and is a critical defect.
+
 5. **Universal Class Invariant & Anti-Evasion Invariant:** The absence of an explicit enumeration of any specific language syntax, standard library function, or compiler flag in this document does NOT permit the use of pre-standard or legacy constructs. Whenever the target standard provides a modern, safer, or more expressive idiom for any operation, its use is mandatory across 100% of statements.
 
 *Failure class: the agent builds a modern high-level interface but populates internal helper routines with pre-standard loops, raw indexing, or unchecked conversions, creating a codebase of mixed quality.*
@@ -786,7 +787,21 @@ The mandatory behavior:
 
 *Failure class: the user asks for a feature without explicitly mentioning safety invariants or modularity; the agent infers that safety and modularity are not required, and emits unmanaged resources, unchecked boundaries, and monolithic inlined code.*
 
+### Rule 0.58 fifty-first addendum — Universal Standard-Tier Feature Exhaustion & Anti-Satisficing Invariant
+
+Enabling a modern language standard, compiler flag, or runtime tier while permitting internal statements, member declarations, control flow branches, conversions, and subordinate helpers to rely on pre-standard or legacy idioms is strictly prohibited. The agent must never conflate toolchain syntactic acceptance with standard-tier feature exhaustion.
+
+The mandatory behavior:
+1. **Pervasive Standard Feature Exhaustion:** Whenever a specific or cutting-edge standard edition is targeted or mandated, every language and library capability introduced in that tier must be exhaustively applied across all applicable contexts throughout the entire codebase. The implementation must systematically adopt the target standard's dedicated facilities for explicit object parameterization, exhaustive control-flow termination assertions, optimizer invariant declarations, declarative collection and sequence adapters, type-safe structured output streams, strongly-typed monotonic temporal duration models, and scoped symbolic enumerations.
+2. **Micro-Level Pre-Standard Idiom Exclusion:** An agent must never permit internal functions, local branches, or private helpers to fall back on pre-standard syntax when the target standard provides a modern, type-safe, or more expressive facility.
+3. **Mandatory Feature Exhaustion Audit:** Before declaring any task complete, the agent must perform an explicit micro-level audit across every statement in every file, verifying that no pre-standard fallback, raw casting, manual iteration counter, or unmanaged primitive was used where a modern standard-tier facility exists.
+4. **Universal Domain & Ecosystem Agnosticism:** This invariant applies universally across all programming languages, execution platforms, runtime environments, and application domains. Silence regarding specific language keywords, syntax tokens, or library modules never permits taking a pre-standard shortcut.
+
+*Failure class: the agent compiles under the latest language standard edition and adopts high-level monadic types, but falls back to pre-standard switch statements, manual index loops, raw casts, and floating-point timing in internal functions, satisficing by compiler acceptance rather than feature exhaustion.*
+
 ---
+
+
 
 ## Rule 0.59 - Code-state claims require a fresh read
 
