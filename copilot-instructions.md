@@ -1,3 +1,5 @@
+Author: Barrixar // Project URL: https://github.com/Barrixar/copilot-instructions.md // License: The Unlicense
+
 # Copilot Agent — Mandatory Quality Discipline
 
 ## Critical Task-Start Order
