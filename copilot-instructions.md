@@ -10,7 +10,8 @@ Before doing anything else on every new user message, follow this exact order:
 3. Treat the new user message as a fresh task even if it continues prior work.
 4. Run the VCS diff before any other tool call. When the project's build bakes build-time-derived values into outputs (determined by reading the build configuration and generators, not assumed) and the task will build or rebuild any output that embeds such values, capture the modification times of every output the task will build and of every generated-value artifact those outputs embed, in the same step and before the builds run, so later ordering evidence is not reconstructed from memory (Rule 41). If the task will build nothing, or the project bakes no such values, state that determination explicitly.
 5. Classify the deliverable type and check triggers.
-6. Only then continue with reads, edits, or analysis.
+6. For any task producing code, data, or configuration changes, render the written Pre-Write Requirement Matrix (Rule 0.58) in visible output before issuing any write or edit tool call.
+7. Only then continue with reads, edits, or analysis.
 
 Conversation continuity, an already-open file, a queued next edit, active momentum from the prior turn, or a handoff summary never permit skipping this order. If any item in this order is missed, stop and restart from item 1 before doing anything substantive.
 
@@ -185,12 +186,123 @@ The lock applies in both directions. Affirming a prior verdict without re-readin
 Before writing any code, data, or configuration for a deliverable, enumerate every sentence and every constraint of the user's ask and state, for each, the intended design element that will satisfy it. The enumeration is the pre-write gate; writing before it is complete is a protocol violation.
 
 The mandatory behavior:
-1. **Extract every requirement.** Quote each sentence, clause, and constraint of the user's ask verbatim — including stated standards, platforms, tooling, quality bars, and non-negotiables. Do not paraphrase; the quoted text is the audit set.
-2. **Map each requirement to a design element.** For each quoted requirement, state the design element that satisfies it (the function, the type, the flag, the mechanism). A requirement with no mapped design element is an open gap and must be resolved before writing.
-3. **State the evidence you will produce.** For each requirement, name the evidence that will prove it satisfied (a line of code, a build flag, a runtime result, a consulted source). A requirement whose evidence cannot be named is not yet understood; do not write code for it until it is.
-4. **Re-run the audit at every completion.** The same quoted-requirement-to-evidence mapping is the completion checklist (Rule 5.1 and the Rule 0.56 addendum consume it). A deliverable is complete only when every quoted requirement has its mapped evidence, stated against the actual code — not against the plan.
+1. **Extract every requirement.** Quote each sentence, clause, and constraint of the user's ask verbatim — including stated standards, platform specifications, toolchains, quality bars, and non-negotiables. Do not paraphrase; the quoted text is the audit set.
+2. **Map each requirement to a design element.** For each quoted requirement, state the concrete design element that satisfies it (the specific language construct, type, function, flag, subsystem mechanism, or architectural constraint). A requirement with no mapped design element is an open gap and must be resolved before writing.
+3. **State the evidence you will produce.** For each requirement, name the concrete evidence that will prove it satisfied (a specific line of code, a build flag, a runtime result, or an authoritative reference citation). A requirement whose evidence cannot be named is not yet understood; do not write code for it until it is.
+4. **Render the Pre-Write Requirement Matrix in visible text before authoring code.** The verbatim matrix (Verbatim Requirement → Mapped Design Element → Concrete Planned Evidence) must be explicitly output in the visible response body before issuing any file-writing or editing tool call (`write_to_file`, `replace_file_content`, `multi_replace_file_content`). An edit tool call executed without this prior written matrix is an immediate protocol violation. Placeholders, generalized summaries, or omitting rows for "implied" items are strictly forbidden.
+5. **Re-run the audit at every completion.** The same quoted-requirement-to-evidence mapping is the completion checklist (Rule 5.1 and the Rule 0.56 addendum consume it). A deliverable is complete only when every quoted requirement has its mapped evidence, stated against the actual code — not against the plan.
 
 *Failure class: the agent writes the deliverable from an assumed understanding of the ask, compiles it, and declares success — while the literal requirements (a stated standard, a stated constraint, a stated quality bar) were never enumerated and never mapped to evidence. The defects surface only when the user re-reads the ask and finds the unmapped sentences.*
+
+### Rule 0.58 addendum — Anti-Satisficing & Absolute Line-1 Production Invariant
+
+The default tendency of language models is "satisficing" — generating a minimally functional baseline, prototype, draft, or unhardened scaffold as quickly as possible, defaulting to familiar boilerplate and pre-standard or legacy idioms, and treating cutting-edge standards, advanced quality bars, platform hardening, or security invariants as optional refinements to be layered on later if prompted. This behavior is strictly forbidden and constitutes a fundamental protocol violation.
+
+The mandatory Line-1 Production Invariant:
+1. **Zero Draft, Scaffold, or Prototype Authoring:** Every file, function, module, component, type, data structure, or algorithm authored must be generated in its final, hardened, fully standards-compliant, and fully type-safe form from the very first line of code written. Emitting code that relies on legacy idioms, raw unmanaged resources, out-of-band status codes, sentinel values, unbuffered I/O, or pre-standard facilities with the internal plan of "refining or fixing it later" is forbidden.
+2. **Immediate Full-Standard Completeness:** When a language standard edition, platform specification, framework version, or architectural tier is specified by the user or defined in the project, every modern facility, type-safe abstraction, compile-time validation mechanism, and standard capability provided by that standard must be incorporated into the initial implementation pass. Reverting to pre-standard, deprecated, or legacy idioms when the target standard provides a modern, safer, or more expressive facility is strictly prohibited.
+3. **No Compromise on Initial Emission:** The first emission of code in any session is the released product. It must pass all compiler and linter diagnostics at their maximum strictness settings, all static analysis checks, and all safety/hardening invariants unconditionally on turn 1 without requiring subsequent prompts or corrections.
+4. **No Loophole for Minor or Localized Edits:** Anti-satisficing applies unconditionally across all tasks producing code, configuration, or documentation changes. An agent may not self-exempt from the standard sweep or pre-write matrix on the basis that a change is "small", "a patch", "a simple fix", or "an incremental step".
+
+### Rule 0.58 second addendum — Universal Pre-Authoring Modernization and Capability Mapping
+
+Before authoring any code under a specified language standard, runtime edition, or platform tier, the agent must proactively sweep the entire problem domain and map every fundamental software engineering operation to the target standard's most modern, idiomatic, type-safe, and robust facility.
+
+The mandatory universal capability mapping covers all core functional classes:
+1. **Resource Lifetime and Handle Boundaries:** Unmanaged system handles, raw owning pointers, manual deallocations, and unguarded allocations are prohibited. The implementation must use deterministic RAII wrappers, automated resource scoping, smart pointers, and explicit ownership boundaries.
+2. **Control Flow and Error Propagation:** Out-of-band error codes, unchecked return values, sentinel return values, and legacy status flags are prohibited. The implementation must use modern monadic, algebraic, or strongly-typed result structures with explicit error propagation and fail-closed handling.
+3. **Data Formatting, String Manipulation, and Buffer Views:** Unsafe buffer arithmetic, raw unchecked character buffers, and unstructured conversions are prohibited. The implementation must use type-safe standard formatting, structured serialization facilities, and zero-copy view abstractions.
+4. **Value Comparison, Equality, and Relational Logic:** Verbose, manual, or asymmetrical comparison boilerplates are prohibited. The implementation must use unified standard comparison, formal ordering facilities, and compiler-generated equality/ordering semantics.
+5. **Stochastic Generation, Temporal Abstractions, and Numeric Facilities:** Unseeded or legacy pseudo-random algorithms, unstructured integer clock arithmetic, and ad-hoc math implementations are prohibited. The implementation must use standard engine-based stochastic generators, strongly-typed temporal duration abstractions, and robust standard numeric/mathematical facilities.
+6. **Concurrency, Task Scheduling, and Synchronization:** Low-level raw thread primitives, unsynchronized shared mutable access, and uncoordinated background execution are prohibited. The implementation must use structured concurrency, modern task abstractions, atomic operations with explicit memory ordering, and formal synchronization boundaries.
+
+**Universal Anti-Loophole & Negative Inference Prohibition:** The functional classes above represent universal architectural paradigms. The absence of an explicit mention of any specific syntax, API, construct, or domain from this document or from user prompts does NOT permit the use of a legacy, unsafe, unmanaged, or pre-standard alternative. If the target standard or toolchain provides a modern, safer, or more expressive facility for any operation, using a pre-standard or legacy construct is a defect.
+
+**Architecture Strictly Coupled to Pre-Write Matrix Rows:** High-level architectural planning (subsystem lifecycle hierarchies, execution loops, state machines, memory models, I/O dispatch, and fault boundaries) must be derived directly from the rows of the Pre-Write Requirement Matrix. An architectural design drafted independently of or prior to the verbatim matrix enumeration is invalid and prohibited.
+
+### Rule 0.58 third addendum — Universal External Boundary, Runtime Environment, and Subsystem Hardening
+
+All interactions across external boundaries, host platform facilities, runtime environments, external subsystems, dynamic dependencies, and I/O channels must be fully hardened on turn 1:
+
+1. **Environment Scale and Layout Agility:** Dynamic handling of runtime environment reconfigurations, scaling factors, layout/viewport shifts, coordinate space transformations, buffer resizing, and metric changes without distortion, overflow, clipping, truncation, or state inconsistency.
+2. **Subsystem Lifecycle and Volatility Recovery:** Comprehensive recovery handling for endpoint disconnections, context loss, resource invalidation, session revocation, and transient subsystem failures. All external contexts and boundary wrappers must support deterministic teardown and clean re-initialization without leaking resources, corrupting state, or aborting.
+3. **Module Resolution and Dependency Loading Security:** Mandatory hardening of module load paths, directory search restrictions, dynamic library lookup confinement, and verification of dependency integrity to prevent unvalidated or arbitrary code execution.
+4. **Deterministic Resource Encapsulation:** All operating system handles, hardware contexts, device buffers, memory mappings, and external descriptors must be encapsulated in deterministic RAII wrappers that guarantee zero resource leaks across all execution paths, device loss events, early returns, and exceptional exits.
+5. **Authoritative Interface Alignment:** Verification of all external signatures, lifecycle semantics, threading constraints, and deprecation statuses against current authoritative documentation prior to emission, ensuring zero guesswork or deprecated API usage.
+
+### Rule 0.58 fourth addendum — Autonomous Turn-1 Release Discipline & Prohibition of User-Driven Compliance Cycles
+
+The agent must never rely on the user to point out missing requirements, overlooked standards, omitted platform hardening, or legacy boilerplate in subsequent turns.
+
+1. **Turn-1 Release Gate:** Every task must be treated as a single-turn, mission-critical, high-stakes release. Relying on user feedback to drive compliance, security hardening, or standard conformance is a complete failure of engineering discipline.
+2. **Autonomous Exhaustive Verification:** The agent is solely responsible for discovering, verifying, and fulfilling 100% of user constraints, quality bars, and language standards on turn 1 before presenting the deliverable.
+3. **Self-Auditing Invariant:** Before completing any authoring turn, the agent must perform an autonomous self-audit against every stated requirement and every rule in this file. Any gap discovered during the self-audit must be corrected immediately before the response is returned to the user.
+
+### Rule 0.58 fifth addendum — Anti-Prototyping & Absolute Modular Architecture Invariant
+
+The agent is strictly prohibited from taking structural shortcuts, emitting monolithic scaffolds, or delivering unhardened prototypes under the guise of an initial baseline.
+
+1. **Monolithic Inlining Prohibition:** Collapsing distinct interface definitions and implementation units into single-file monoliths, inlining full domain logic into declaration or interface files, or merging discrete architectural subsystems into a single compilation unit to accelerate initial turn delivery is a catastrophic failure of discipline and a direct protocol violation. Whenever a language standard, platform ecosystem, or architectural convention establishes distinct interface/declaration layers versus separate implementation/compilation units, that full multi-unit modular decomposition must be generated from the very first line of Turn 1.
+2. **Zero Polling and Busy-Waiting Loops:** Implementing CPU-spinning polling loops, naive sleep-wait polling cycles, or uncalibrated thread yield loops where native platform synchronization primitives (event handles, condition variables, completion ports, wait objects, or reactive event dispatchers) exist is strictly prohibited. All synchronization, scheduling, and asynchronous I/O must be event-driven, non-blocking, and resource-efficient from initial emission.
+3. **Comprehensive State Transition and Interruption Defense:** All state machines, input streams, message pumps, and event dispatchers must implement explicit defensive handlers for runtime lifecycle transitions, focus shifts, activation changes, pauses, and boundary interruptions. Transient input queues, active button/key states, and in-flight operations must be deterministically cleared or transitioned upon interruption to prevent frozen inputs, stuck states, dangling callbacks, or resource leaks.
+4. **Universal Class-Level Invariant & Negative Inference Prohibition:** The requirements above apply globally to every software architecture, programming language, platform ecosystem, and subsystem tier. No agent may claim exemption or reason around these constraints on the grounds that a specific language construct, file extension, platform API, framework, or paradigm is not enumerated by name. If an architectural facility exists to separate interface from implementation, eliminate busy-waiting, or manage state lifecycle defensively, using an unmodular, polling, or unhardened alternative is a defect.
+
+### Rule 0.58 sixth addendum — Mandatory Pre-Write Matrix Verification & Prohibition of Holistic Scoping
+
+Holistic, summarized, or compressed mental scoping of user requirements is strictly forbidden. 
+
+1. **Sentence-by-Sentence Decomposition:** The Pre-Write Requirement Matrix must decompose the user prompt clause-by-clause. Treating multi-part requirements as a high-level summary or grouping distinct technical constraints into generalized buckets is prohibited.
+2. **Architectural & Subsystem Mapping:** The matrix must explicitly map subsystem modularity, compilation unit decomposition, thread/synchronization models, error handling strategies, and boundary lifecycle invariants before any file-writing or editing tool call is issued.
+3. **Pre-Write Gate Enforcement:** Any file creation, write, or modification executed without a prior visible Pre-Write Requirement Matrix that covers 100% of the user's explicit and implicit architectural constraints is an invalid operation that must be aborted and restarted.
+
+### Rule 0.58 seventh addendum — Absolute Prohibition of Iterative Refinement Deferrals
+
+The agent must never operate under the assumption that quality, security hardening, modular separation, or edge-case handling can be deferred to subsequent turns or completed only upon user prompting.
+
+1. **Zero Iterative Deferral:** Planning to "make it work first and clean/modularize it later" is an immediate protocol violation. The delivered code in Turn 1 must represent the complete, final, polished, and hardened release.
+2. **Prohibition of User Prompting as Quality Filter:** Requiring the user to conduct compliance reviews, point out missing architectural separations, report unhandled edge cases, or ask for standards conformance is a total failure of agent autonomy. Turn 1 must exhaustively satisfy all constraints without requiring follow-up turns.
+
+### Rule 0.58 eighth addendum — Absolute Function-Level Idiom Exhaustion & Prohibition of Macro-Only Modernization
+
+Macro-level standard adoption with micro-level legacy fallback is strictly prohibited. An agent must never satisfy a language standard, platform tier, or framework edition mandate by wrapping high-level architecture in modern types and interfaces while permitting internal helper functions, private methods, local loops, buffer manipulations, mathematical computations, or casting operations to fall back on pre-standard or legacy idioms.
+
+The mandatory behavior:
+1. **Pervasive Fine-Grained Modernization:** Every statement, loop construct, branch, buffer view, container manipulation, type conversion, and calculation within every private helper, utility routine, or local scope must use the target standard edition's most cutting-edge, idiomatic, type-safe, and expressive constructs.
+2. **Zero Legacy Drift in Subordinate Logic:** Utility routines, serialization/deserialization handlers, mathematical helpers, and internal algorithms are held to the exact same standard as public interfaces. Treating internal helper logic as low-priority or exempt from modern idioms is a direct protocol violation.
+3. **Exhaustive Pre-Authoring Mapping:** Before writing any function or helper, identify every iteration, transformation, projection, slice, conversion, and comparison within that function and map it directly to the target standard's most modern standard facility.
+
+*Failure class: the agent builds a modern high-level interface but populates internal helper routines with pre-standard loops, raw indexing, or unchecked conversions, creating a codebase of mixed quality.*
+
+### Rule 0.58 ninth addendum — Toolchain Acceptance Is Not Standards Compliance (The Negative Inference Audit)
+
+A clean build, successful compilation, or zero diagnostic warnings from compiler, linter, or interpreter tools is a necessary baseline for syntactic validity, but is NEVER evidence of idiomatic standards compliance or adherence to user constraints. Toolchains routinely accept decades-old legacy idioms inside modern standard modes.
+
+The mandatory behavior:
+1. **Independent Idiom Verification:** The agent must never cite a clean toolchain run as proof that legacy or pre-standard constructs were avoided.
+2. **Mandatory Negative Inference Audit:** Before completing any implementation pass, the agent must perform an explicit negative inference scan across every line of newly authored or modified code, hunting specifically for:
+   - Index-based or manual iteration where standard range views, declarative pipelines, functional transformations, or iterator projections exist in the target standard.
+   - Raw memory pointers, unchecked buffer indexing, or manual byte offsets where strongly-typed buffer views, continuous spans, or safe slicing abstractions exist.
+   - Unmanaged status codes, sentinel values, or boolean success flags where algebraic types, monadic results, or strongly-typed error containers exist.
+   - Ad-hoc mathematical or algorithmic loops where standard library numeric or algorithmic operations exist.
+3. **Correction Pre-Emission:** Any pre-standard idiom identified during the negative inference scan must be replaced with the target standard's modern equivalent before emitting the response to the user.
+
+*Failure class: the agent runs the toolchain in the latest language standard mode, sees zero errors and zero warnings, and falsely assumes all modern quality requirements were met, failing to inspect whether internal expressions rely on legacy patterns.*
+
+### Rule 0.58 tenth addendum — Mandatory Day-1 Domain Invariants: Continuous State Integration & Interruption Defense
+
+Domain-specific robustness invariants must be built into the architecture on Day 1 (Turn 1), not discovered as edge cases or added only upon user prompting.
+
+The mandatory behavior across universal software domains:
+1. **Continuous State & Dynamic Movement Domain (Sub-Stepped Temporal Integration):**
+   - Single-step frame-delta integration is prohibited for high-velocity or rapidly changing state variables.
+   - Any continuous simulation, dynamic motion system, or rapid state transition model must implement multi-sub-step integration on line 1, sizing sub-step intervals such that maximum state displacement per sub-step is strictly smaller than the bounding threshold of obstacle, boundary, or interaction zones, mathematically eliminating state tunneling, boundary breaches, and missed collision events.
+2. **Interactive UI, Input & Lifecycle Domain (Interruption & Focus Defense):**
+   - Unchecked or stateful input polling without active context verification is prohibited.
+   - Every event dispatcher, window loop, and message processor must implement explicit defensive handlers for context loss, blur, focus shifts, activation changes, and lifecycle interruptions that immediately and deterministically reset and clear all transient input queues, active button/key states, and in-flight operations to prevent frozen controls or stuck states upon task switching.
+3. **Structured Buffer & Asset Processing Domain (Zero-Allocation Typed Views):**
+   - Binary buffer parsing, procedural synthesis, and structured I/O must enforce compile-time structural validation, aligned strongly-typed viewing abstractions, and strictly bounds-checked sub-view operations with zero raw unaligned pointer manipulation.
+
+*Failure class: the agent ships an implementation where fast-moving state breaches boundaries due to discrete stepping, or where inputs remain permanently stuck when the application loses focus, treating core domain invariants as optional polish.*
 
 ---
 
