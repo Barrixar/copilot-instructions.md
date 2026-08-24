@@ -338,6 +338,63 @@ The mandatory behavior:
 3. **Zero Partial-Implementation Delivery:** Every subsystem promised by the architecture (computational core, state simulation, procedural generation, presentation pipeline, input/event dispatch, external host integration) must be fully implemented with all specified capabilities in the initial release. Emitting stubbed functions, single-tier shortcuts, unhardened fallbacks, or unstyled baselines is a protocol violation.
 4. **Prohibition of Example-List Evasion:** The enumeration of any category, paradigm, or failure class in this document or in user prompts is illustrative of the general class, NOT an exhaustive closed set. An agent must never argue or reason that an unhardened, pre-standard, or satisficed construct is permissible because its exact syntax, identifier, or subtype was not explicitly listed. Any operation that fails to use the target standard's highest-tier, most type-safe, most robust, and most idiomatic facility is a defect.
 
+### Rule 0.58 fourteenth addendum — Universal Exclusion Verification (The Anti-Existential-Trap Invariant)
+
+Testing or asserting compliance based on the existential presence of modern standard features or architectural abstractions while omitting the universal exclusion of legacy constructs is strictly prohibited. An evaluation oracle that queries whether modern constructs exist ($\exists x \in \text{Codebase} \mid x \in \text{ModernFacilities}$) will evaluate to true on a mixed-standard codebase and generate a catastrophic false-positive compliance verdict.
+
+The mandatory behavior:
+1. **Universal Exclusion Verification Standard:** Every compliance pass, regression gate, and requirement ledger entry evaluating language standards, runtime editions, or quality bars must formulate its verification oracle as a proof of universal exclusion:
+   $$\forall s \in \text{CodebaseStatements}, \quad \text{IsLegacyOrPreStandard}(s) \equiv \text{false}$$
+2. **Prohibition of Presence-Only Proofs:** Citing the presence of modern language constructs, type abstractions, or compiler flags is NEVER evidence that the deliverable is compliant. Proof of compliance requires demonstrating that zero pre-standard or legacy alternatives exist anywhere in public interfaces or private subordinate logic.
+3. **Exclusionary Test Formulation:** When drafting verification tests, regression criteria, or ledger assertions, every check must be formulated to fail if a single line of pre-standard or unhardened code survives in any private helper, internal routine, closure, or subordinate method across any source unit.
+4. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies universally across all programming languages, platforms, and frameworks. An agent must never reason that presence of modern paradigms in top-level declarations excuses legacy constructs in subordinate implementations.
+
+*Failure class: the agent inspects top-level class declarations, observes modern types, and declares the codebase 100% compliant, failing to audit whether internal helper routines in implementation files contain pre-standard loops, raw indexing, or unmanaged primitives.*
+
+### Rule 0.58 fifteenth addendum — Mandatory Statement-Level Pre-Authoring Operation-to-Facility Binding
+
+High-level subsystem mapping without statement-level primitive operation binding is strictly prohibited. An agent must never begin authoring code with a Pre-Write Requirement Matrix that maps only high-level architectural components without explicitly binding every granular primitive software operation to its specific cutting-edge target standard facility.
+
+The mandatory behavior:
+1. **Granular Primitive Pre-Binding:** Before emitting the first line of code, the Pre-Write Requirement Matrix must explicitly enumerate and bind every primitive operation category required by the deliverable to its target standard facility:
+   - *Multi-Dimensional & Structured Buffer Indexing:* Explicitly bind to standard multi-dimensional viewing and slicing abstractions, strictly prohibiting manual stride arithmetic or raw pointer offsets.
+   - *Asynchronous Execution & Worker Lifecycles:* Explicitly bind to structured concurrency facilities with deterministic lifetime scoping and cooperative cancellation mechanisms, strictly prohibiting unmanaged raw thread primitives and manual polling flags.
+   - *Fallible Control Pipelines & Error Propagation:* Explicitly bind to strongly-typed algebraic result types and monadic composition chains, strictly prohibiting out-of-band status codes or sentinel return values.
+   - *Domain Enumeration & Discrete Value Mapping:* Explicitly bind to standard type-safe conversion facilities, strictly prohibiting untyped scalar or primitive casts.
+   - *Exhaustive Control Flow Invariants:* Explicitly bind exhaustive conditional branches and unreachable execution paths to standard compiler-enforced unreachable annotations.
+   - *High-Precision Temporal Metrics:* Explicitly bind temporal calculations and interval timers to strongly-typed duration and clock abstractions, strictly prohibiting unstructured floating-point scalar clocks.
+   - *External Resource & Descriptor Encapsulation:* Explicitly bind all operating system handles, descriptors, and hardware contexts to deterministic, move-only RAII wrappers.
+2. **Prohibition of Authoring-Time Discovery:** An agent may not defer decisions regarding how internal helpers will manipulate memory, synchronize tasks, or format data to authoring time. All operational primitives must be bound in the pre-write phase prior to line 1.
+3. **Universal Anti-Loophole Invariant:** The categories above represent universal computational primitives. The absence of an explicit mention of any specific syntax or framework API does NOT permit the use of pre-standard or legacy alternatives.
+
+*Failure class: the agent maps high-level components in the pre-write matrix, but during authoring of helper functions defaults to training baseline boilerplate because granular operational primitives were never explicitly bound prior to coding.*
+
+### Rule 0.58 sixteenth addendum — Mandatory Non-Nominal Boundary Hardening & Lifecycle Resilience on Line 1
+
+Prioritizing nominal execution paths while deferring host environment lifecycle events, non-nominal runtime transitions, or external boundary resource scoping to subsequent turns or passes is strictly prohibited.
+
+The mandatory behavior:
+1. **Immediate Boundary Scoping:** Every external handle, operating system context, device descriptor, dynamic module lookup boundary, and memory allocation must be encapsulated within a deterministic, move-only RAII wrapper on Line 1 of Turn 1. Manual acquisition and release across execution loops is a direct protocol violation.
+2. **Mandatory Non-Nominal Lifecycle Handling:** Event dispatchers, session managers, and execution loops must implement explicit, hardened handlers for non-nominal host events on Line 1 of Turn 1:
+   - Dynamic host scaling shifts, display density reconfigurations, and coordinate space transformations.
+   - Event queue invalidations, dirty region servicing, and presentation buffer updates.
+   - Session focus loss, activation transitions, background suspension, and interruption defenses that immediately clear transient input state.
+3. **Prohibition of "Nominal-Path-First" Deferral:** An agent must never rationalize omitting boundary resilience or host lifecycle handling on the grounds that the core nominal execution loop functions. An implementation without complete boundary hardening is defective and non-compliant.
+
+*Failure class: the agent authors a working nominal execution loop but leaves external resources unmanaged, ignores host environment scaling shifts, and omits focus interruption handling, creating a fragile deliverable that leaks handles or corrupts state during host transitions.*
+
+### Rule 0.58 seventeenth addendum — Subordinate Logic Scrutiny & Pre-Emission Gate Halt
+
+In large multi-unit architectures, allowing generative momentum to dilute scrutiny over subordinate private methods, utility routines, internal lambdas, or helper closures is strictly prohibited.
+
+The mandatory behavior:
+1. **Mandatory Pre-Emission Review Halt:** After generating all compilation units and before presenting the deliverable to the user, the agent must perform a mandatory, blocking inspection pause across every interface definition and implementation unit authored or modified.
+2. **Subordinate Scrutiny Sweep:** The agent must inspect every private method, internal helper, closure, and utility routine against the Pre-Authoring Capability Binding (Addendum 15) and Negative-Inference Audit (Addendum 9), verifying that no legacy or pre-standard fallback slipped into subordinate logic during multi-file emission.
+3. **Zero Compromise in Internal Logic:** Subordinate helper routines are held to the exact same rigorous standard as public architectural interfaces. Any pre-standard loop, unchecked cast, or unmanaged handle discovered during the scrutiny halt must be corrected before releasing the deliverable.
+4. **Universal Class Invariant:** This scrutiny halt applies unconditionally across all programming languages, toolchains, and file types. No agent may bypass this audit on the basis of file count, project scale, or clean toolchain compilation.
+
+*Failure class: the agent generates multiple modular source units, confirms clean compilation, and rushes to output the completion response without inspecting whether private helper functions in subordinate units maintained the quality bar.*
+
 ---
 
 ## Rule 0.59 - Code-state claims require a fresh read
