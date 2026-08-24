@@ -395,6 +395,87 @@ The mandatory behavior:
 
 *Failure class: the agent generates multiple modular source units, confirms clean compilation, and rushes to output the completion response without inspecting whether private helper functions in subordinate units maintained the quality bar.*
 
+### Rule 0.58 eighteenth addendum — Deterministic Multi-Source Input Multiplexing & Physical-to-Intent Decoupling
+
+Conflating discrete physical input hardware events (raw keystrokes, button presses, contact pulses, axis actuations) with continuous or aggregated logical domain intent states is strictly prohibited. An agent must never mutate high-level domain or agent intent variables directly inside raw physical event callbacks where multiple physical input sources, signals, or bindings map to the same logical intent.
+
+The mandatory behavior:
+1. **Two-Tier Input Architecture:** Raw input event handlers and polling dispatchers must strictly record and store the discrete physical activation state of individual hardware inputs, signals, or channels into a dedicated physical hardware state store.
+2. **Pure Intent Evaluation Function:** Logical domain intents (directional vectors, continuous velocities, activation desires, action triggers) must be computed dynamically in the simulation/update cycle from the aggregated physical state store.
+3. **Elimination of Input Release Interference:** Releasing an alternative, duplicate, or secondary physical input mapped to a logical action must NEVER cancel the active intent if another physical input mapped to the same action remains physically asserted.
+4. **Interruption Sanitization:** When session focus is lost or a lifecycle boundary transition occurs, all physical input states in the hardware store must be deterministically cleared, automatically neutralizing all derived intent vectors without dangling state.
+5. **Universal Class Invariant & Anti-Evasion Invariant:** The operational classes above represent universal human-machine and signal-processing paradigms. The absence of an explicit mention of any specific hardware device, input protocol, operating system event, or framework does NOT permit the direct binding of raw input events to composite domain state.
+
+*Failure class: the agent binds individual input-release events directly to composite logical intent flags, causing the release of an alternative input binding to abruptly cancel active processing while a primary input binding remains physically asserted.*
+
+### Rule 0.58 nineteenth addendum — Hot-Loop Resource Hoisting & Zero-Allocation Render/Update Invariant
+
+Allocating, instantiating, recreating, or destroying host presentation resources, graphics handles, device contexts, shaders, drawing primitives, textures, fonts, or framebuffers inside continuous per-frame execution or render loops is strictly prohibited.
+
+The mandatory behavior:
+1. **Mandatory Resource Hoisting:** All persistent graphical and computation resources (drawing tools, palettes, typography resources, render targets, off-screen framebuffers, pipeline state objects) must be pre-allocated, instantiated, and cached in dedicated subsystem pools during initialization or resize lifecycle events.
+2. **Hot-Loop Zero-Allocation Discipline:** Continuous per-frame execution loops must operate exclusively on cached, pooled, or stack-scoped transient memory, generating zero host OS handle allocation or deallocation churn during active frame cycles.
+3. **Handle Table Exhaustion Defense:** Citing RAII cleanup as a justification for per-frame allocations is prohibited; RAII guarantees leak prevention upon scope exit, but does not prevent host OS handle table contention, kernel context-switch overhead, or system resource exhaustion caused by thousands of allocations per second.
+4. **Universal Class Invariant:** This requirement applies universally across all graphical, audio, computational, and streaming execution loops regardless of the underlying graphics API, windowing framework, or host platform.
+
+*Failure class: the agent creates and deletes drawing handles per-frame inside an inner execution loop within RAII scopes, maintaining zero leaks but generating thousands of OS handle operations per second, causing frame stutter, latency spikes, and resource table contention.*
+
+### Rule 0.58 twentieth addendum — Universal Responsive Typography & Scalable Interface Metric Invariant
+
+Treating font sizes, HUD elements, UI glyphs, text bounding boxes, or spatial interface metrics as static compile-time constants in scalable viewport or presentation architectures is strictly prohibited.
+
+The mandatory behavior:
+1. **Synchronous Metric Scaling:** All font dimensions, text bounding boxes, interface spacing, and layout metrics must be dynamically recalculated and recreated synchronously during viewport resize, display mode changes, and environmental scale factor transitions.
+2. **Aspect-Ratio and Density Proportionality:** Typography and interface metrics must scale proportionally with dimensional viewport scale ratios, preventing unreadable, miniature, disproportionate, or clipped text across high-resolution, high-density, or non-standard aspect ratio displays.
+3. **Boundary Clipping Immunity:** Interface and diagnostic text coordinates must be anchored and clamped relative to the active scaled presentation boundaries, preventing text from rendering outside visible viewport margins.
+4. **Universal Class Invariant:** This rule applies globally to all graphical interfaces, heads-up displays, canvas visualizers, and spatial rendering engines across all platforms and toolchains.
+
+*Failure class: the agent dynamically scales viewport canvas geometry on resize but leaves typography at static compile-time pixel dimensions, resulting in disproportionate or unreadable interface text when rendered on high-resolution displays.*
+
+### Rule 0.58 twenty-first addendum — Discrete Pacing & Event-Driven State Machine Transition Invariant
+
+Transitioning high-impact discrete state machine events (milestone achievements, phase completions, boundary resets, terminal events, stage transitions) instantaneously within a 0ms frame tick without explicit pacing or presentation feedback is strictly prohibited.
+
+The mandatory behavior:
+1. **Mandatory Pacing States:** High-impact domain state transitions must incorporate dedicated intermediate transition states with explicit countdown timers, visual/auditory feedback signals, and clear lifecycle delimiters.
+2. **Temporal Decoupling of Domain Reset:** Entity repositioning and simulation relaunching must occur only after the completion of the pacing delay, ensuring perceptual clarity, state comprehension, and professional execution pacing.
+3. **Universal Class Invariant:** This requirement applies to all discrete interactive simulations, state machine workflows, and operational state coordinators across all software domains.
+
+*Failure class: upon a high-impact lifecycle event or discrete state boundary transition, the system resets state in 0ms without an intermediate pacing delay or transition phase, causing user disorientation, lost perceptual context, or race conditions.*
+
+### Rule 0.58 twenty-second addendum — Platform Host Message Loop & Autonomous Presentation Pipeline Separation
+
+Conflating OS message-driven event lifecycle handlers with autonomous high-speed presentation pipelines is strictly prohibited.
+
+The mandatory behavior:
+1. **Context-Appropriate API Usage:** Message-specific host lifecycle APIs (such as paint dispatch validation mechanisms) must NEVER be invoked outside their designated message handler contexts.
+2. **Autonomous Execution Pipeline Contexts:** High-speed autonomous execution loops must present frames through dedicated presentation contexts or double-buffered swap chains, accompanied by clean validation to prevent host message starvation.
+3. **Universal Class Invariant:** This separation applies to all interactive applications across desktop, mobile, and web windowing architectures.
+
+*Failure class: the agent invokes message-specific host paint APIs inside a continuous autonomous execution loop outside their designated message handler, causing improper clipping calculations and host message starvation.*
+
+### Rule 0.58 twenty-third addendum — Mandatory OS Platform Initialization, DPI Awareness & Host Boundary Constraints
+
+Omitting host platform scale awareness or leaving host window dimensions unconstrained against degenerate minimal geometry is strictly prohibited.
+
+The mandatory behavior:
+1. **Startup Scale Awareness Declaration:** All desktop graphical applications must declare platform-level scale and DPI awareness at the earliest process entry point before creating windows or querying system metrics.
+2. **Host Boundary Constraints:** Window message procedures and event listeners must enforce minimum dimension tracking constraints to prevent degenerate zero-size rendering artifacts, divide-by-zero layout errors, or presentation breakdown.
+3. **Universal Class Invariant:** This requirement applies to all native and cross-platform desktop graphical environments.
+
+*Failure class: the application is launched on a high-density display and renders blurry bitmap-stretched interfaces, or is resized to near-zero dimensions, causing division-by-zero layout breakdowns.*
+
+### Rule 0.58 twenty-fourth addendum — Real-Time Simulation Memory Pre-Reservation & Bounded Mathematical Reflection Invariant
+
+Dynamic heap memory reallocations inside real-time simulation loops and unbounded iterative mathematical reflections or search algorithms are strictly prohibited.
+
+The mandatory behavior:
+1. **Memory Pre-Reservation:** All dynamic simulation containers (particle systems, trajectory histories, entity pools, transient trail buffers) must pre-reserve their maximum capacity during initialization and reset cycles, eliminating heap allocations during continuous integration cycles.
+2. **Bounded Mathematical Trajectories:** Predictive trajectory simulations, bounce reflections, raymarching loops, and iterative root-finding algorithms must enforce deterministic iteration bounds and mathematical range clamping ($O(1)$) to guarantee execution time limits and numerical stability under all incident conditions.
+3. **Universal Class Invariant:** This requirement applies universally across all physics simulations, numerical solvers, computational geometries, and real-time graphics pipelines.
+
+*Failure class: real-time simulation entity containers reallocate heap memory during continuous update loops causing latency spikes, and trajectory reflection algorithms run unbounded iteration loops under boundary edge cases.*
+
 ---
 
 ## Rule 0.59 - Code-state claims require a fresh read
