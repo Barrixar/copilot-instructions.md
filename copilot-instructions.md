@@ -543,6 +543,97 @@ The mandatory behavior:
 
 *Failure class: the agent verifies that the software runs without crashing and concludes all requirements are satisfied, failing to inspect whether lines of code contain pre-standard syntax.*
 
+### Rule 0.58 thirty-first addendum — Universal Asynchronous Boundary Lifetimes & Deterministic Teardown Invariant (Anti-Use-After-Free)
+
+Submitting host-allocated memory buffers, descriptors, or state structures to asynchronous background execution contexts, external device drivers, DMA channels, worker threads, or background platform subsystems without guaranteeing deterministic cancellation and completion prior to buffer deallocation is strictly prohibited.
+
+The mandatory behavior:
+1. **Asynchronous Memory Lifetime Synchronization:** Whenever host memory buffers or data structures are referenced by asynchronous external drivers, worker threads, or background platform subsystems, the owning container's destructor, teardown routine, or buffer invalidation handler must deterministically cancel, abort, and drain all in-flight asynchronous operations before deallocating the underlying memory.
+2. **Immediate Stream Cancellation Discipline:** State transitions that suppress, mute, or deactivate active asynchronous streams or hardware channels must immediately and synchronously issue cancellation signals to halt ongoing background processing, rather than solely suppressing future submissions while leaving in-flight background operations active.
+3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies universally across all asynchronous hardware interfaces, native operating system APIs, multimedia playback systems, background worker pools, and asynchronous I/O queues across all programming languages and platforms. Citing RAII container destruction as sufficient is a protocol violation if background threads or drivers continue executing against freed memory (CWE-416 Use-After-Free).
+
+*Failure class: the agent passes an in-memory buffer to an asynchronous external driver or worker thread and frees the host buffer container while the background execution context is still reading from it, causing memory corruption or process termination during teardown.*
+
+### Rule 0.58 thirty-second addendum — Multi-Dimensional Vector Normalization & Scalar Invariant Synchronization
+
+Mutating, scaling, or adding orthogonal components to multidimensional vector quantities without mathematically re-normalizing and explicitly synchronizing composite vector magnitudes with authoritative scalar limits and trackers is strictly prohibited.
+
+The mandatory behavior:
+1. **Multidimensional Invariant Coupling:** Whenever a directional vector or multi-axis physical quantity is modified by external impulses, angular deflections, or orthogonal component transfers, the resultant vector must be mathematically re-normalized and clamped to the authoritative maximum scalar magnitude.
+2. **Scalar-to-Vector Magnitude Parity:** Entity data models that maintain both a composite vector representation and a scalar magnitude tracker must enforce mathematical equivalence ($|\vec{v}| \equiv v_{\text{scalar}}$) across 100% of mutation paths, preventing scalar trackers from drifting or allowing composite vectors to exceed physical domain limits.
+3. **Universal Class Invariant:** This rule applies universally across all numerical simulations, geometric transformations, physical engines, raytracing calculations, and vector mathematics across all software domains.
+
+*Failure class: the agent adds an impulse or transfer to a single axis of a multi-dimensional velocity vector without re-normalizing, causing the total vector magnitude to exceed the domain maximum speed limit and desynchronizing scalar speed trackers.*
+
+### Rule 0.58 thirty-third addendum — Sub-Frame Discrete Signal Latching & Edge-Triggered Ingestion Invariant
+
+Relying exclusively on point-in-time level polling for momentary, discrete, or edge-triggered interactive inputs within variable-rate or discrete-stepped simulation loops is strictly prohibited.
+
+The mandatory behavior:
+1. **Edge-Triggered Latching Store:** Discrete interactive events and momentary triggers must be captured into a dedicated latching store at the instant of arrival and held latched until explicitly consumed by the simulation update tick.
+2. **Zero Sub-Frame Event Dropping:** Fast user interactions that assert and release within the interval of a single frame or simulation tick must never be dropped or ignored due to point-in-time state polling evaluating to released on the subsequent tick.
+3. **Interruption Sanitization:** When application or session focus is lost, all latched states and active level states must be deterministically cleared to prevent sticky triggers or stale intent persistence upon focus resumption.
+4. **Universal Class Invariant:** This requirement applies across all interactive ingestion systems, event dispatchers, input pipelines, and user interface controls.
+
+*Failure class: the agent polls raw instantaneous state on frame ticks; a fast user actuation generates press and release events between frames, causing the simulation tick to evaluate the input as unpressed and drop the user's action.*
+
+### Rule 0.58 thirty-fourth addendum — Universal Spatial-Physical Continuity & Transitional State Dynamic Anchoring
+
+Leaving simulated or visual entities in detached, out-of-bounds, unanchored, or mathematically discontinuous states during transitional, celebration, milestone, or non-active state machine phases is strictly prohibited.
+
+The mandatory behavior:
+1. **Continuous Spatial Anchoring:** Entities involved in state transitions must immediately and dynamically anchor to their valid topological reference points on line 1 of the transition.
+2. **Dynamic Pacing Tracking:** During timed transitional phases, anchored entities must continuously track moving parent reference frames in real-time, preventing visual detachment or static snapping at phase conclusion.
+3. **Interactive Transition Responsiveness:** Transitional and pacing states must support responsive user interaction to allow immediate phase advancement without forced delays.
+4. **Resumption Target Sanitization:** Modifying or resetting domain state while in a suspended, paused, or transitional mode must deterministically synchronize all resumption target states, preventing resumption into stale pre-reset states.
+5. **Universal Class Invariant:** This continuity invariant applies to all state machine architectures, physical simulations, interactive workflows, and lifecycle coordinators.
+
+*Failure class: upon a milestone or phase-change event, the simulated entity remains frozen at out-of-bounds coordinates during a countdown before abruptly teleporting to its spawn location when the active phase begins.*
+
+### Rule 0.58 thirty-fifth addendum — Host Message Queue Validation & Zero-Latency Reactive Event Synchronization
+
+Handling platform or operating system window/presentation lifecycle messages without completing required validation handshake contracts, or implementing frame pacing using uncalibrated sleep loops that introduce artificial input latency floors, is strictly prohibited.
+
+The mandatory behavior:
+1. **Mandatory Host Handshake Validation:** Platform message handlers that signal dirty regions, invalidation events, or presentation updates must execute the complete platform-specific validation sequence on line 1, preventing continuous unvalidated message flooding and CPU starvation.
+2. **Zero-Latency Reactive Event Dispatching:** Execution loops that coordinate host messages and real-time simulation must utilize reactive OS event-synchronization primitives that yield CPU time efficiently while waking instantaneously upon the arrival of incoming hardware input or host messages, eliminating artificial latency floors.
+3. **Universal Class Invariant:** This requirement applies across all native desktop windowing systems, real-time message pumps, and interactive host application runtimes.
+
+*Failure class: the agent handles window invalidation messages without validating the dirty region, causing an infinite message flood; or calls unconditional sleep timers in the message pump, adding an artificial latency barrier to user input.*
+
+### Rule 0.58 thirty-sixth addendum — Single-Source Domain Parameter Invariant & Cross-Declaration Drift Elimination
+
+Defining redundant, unlinked literal constants or default parameter values across multiple header files, type declarations, or subsystem boundaries is strictly prohibited.
+
+The mandatory behavior:
+1. **Single Source of Truth:** Every domain parameter, physics constant, limit threshold, and dimension must be defined in exactly one authoritative location. All data structure default initializers, helper routines, and subsystem modules must reference that authoritative constant directly by identifier or enforce strict compile-time static assertion equality.
+2. **Zero Literal Duplication:** Authoring separate data structures with hardcoded magic numbers that duplicate or mirror domain constants defined elsewhere in the codebase constitutes parameter drift and is a defect.
+3. **Universal Class Invariant:** This requirement applies across all software architectures, multi-file projects, and configuration systems.
+
+*Failure class: the agent defines a maximum threshold constant in a constants header, but initializes a struct field default in a types header to a different hardcoded literal, creating silent cross-header parameter drift and inconsistent entity initializations.*
+
+### Rule 0.58 thirty-seventh addendum — Universal Resource Context State Restoration & Borrowed Handle Invariant
+
+Modifying, selecting, or binding external resource handles, graphics objects, render targets, or device contexts without tracking and deterministically restoring the original preexisting handles prior to context destruction or release is strictly prohibited.
+
+The mandatory behavior:
+1. **Deterministic State Restoration:** Whenever a subsystem selects a custom object, buffer, or state configuration into an external or persistent device context, the original handle or baseline state returned by the platform must be captured and restored before releasing or deleting the context container.
+2. **Destructor Cleanup Guarantee:** Container classes encapsulating stateful contexts must restore original state objects in their destructors prior to releasing memory or deleting underlying context handles, preventing system resource leaks, memory locking, and host handle corruption.
+3. **Universal Class Invariant:** This requirement applies across all graphical contexts, device abstractions, native drawing environments, and stateful hardware pipelines across all operating systems and platforms.
+
+*Failure class: the agent selects a custom drawing surface or bitmap into a persistent device context and deletes the context without restoring the original stock object, leaking kernel handles and causing subsequent paint operations to fail.*
+
+### Rule 0.58 thirty-eighth addendum — Universal Platform Baseline Structure Population & Semantic Contract Invariant
+
+Mutating platform-supplied lifecycle event structures without first populating baseline metrics through default platform processors, or passing non-null instance handles to predefined system-namespace resource loaders, is strictly prohibited.
+
+The mandatory behavior:
+1. **Baseline Structure Population Sequencing:** When handling platform or windowing event messages that provide mutable system configuration structures, the default platform message processor must be invoked first to establish baseline OS metrics and frame boundaries before custom structure members are overridden.
+2. **Authoritative Semantic Contract Verification:** All interactions with native platform APIs must strictly conform to authoritative documentation regarding parameter namespaces, instance handles, and nullability contracts. Passing application instance handles to system-global resource loaders that mandate null namespace scopes is a defect.
+3. **Universal Class Invariant:** This requirement applies across all native platform event loops, windowing systems, operating system APIs, and framework messaging architectures.
+
+*Failure class: the agent overrides min/max tracking metrics in an event handler without invoking the default platform message procedure first, resulting in uninitialized window frame calculations and incorrect positioning.*
+
 ---
 
 ## Rule 0.59 - Code-state claims require a fresh read
