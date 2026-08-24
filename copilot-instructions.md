@@ -2271,7 +2271,84 @@ The mandatory qualification standard:
 4. **Unexercised Functional State Disclosure:** If interactive stimuli cannot be injected in the host environment, the agent must explicitly classify the deliverable as "built and liveness-verified only; interactive stimulus-response state transitions unexercised," stating the exact untested state paths per Rule 39 and Rule 39 addendum.
 5. **Universal Anti-Evasion Invariant:** An agent must never describe an unexercised stimulus-response path as functional or complete based on process liveness or loop survival. Any deliverable whose interactive stimulus-response state transitions have not been executed and verified must be explicitly classified as built and unverified per Rule 39.
 
-*Failure class: the agent compiles an interactive or reactive software system, runs it in a background process, verifies that the process is alive, polling events, and cycling without crashing, and concludes the application is fully functional, without having verified whether applying external stimuli actually produces state mutation or observable downstream output.*
+---
+
+## Rule 47 — State machine lifecycle bifurcation & anti-circular state trapping invariants
+
+In any state machine, workflow engine, or lifecycle management architecture:
+
+1. **Explicit Bifurcation of Reset vs. State Transition:** The architecture must formally distinguish between **quiescent state re-initialization** (returning an engine, manager, or session to an idle, configuration, or pre-execution state) and **active phase transition / restart** (transitioning an engine, manager, or session into an actively progressing operational state). A generic reset routine that forces the machine to an idle state must never be bound to actions or dispatch signals intended to begin or resume active execution.
+2. **Deterministic Forward Progress Invariant:** When an active transition trigger is dispatched from an idle, paused, or terminal state with the intent of initiating execution, the resulting state must evaluate strictly to an active, progressing lifecycle phase. Action dispatches intended to begin execution must never circularly loop back into the pre-start idle state.
+3. **Discrete Configuration Mutators:** Operational configuration adjustments, parameter updates, and mode selections must execute as independent state mutators that do not reset or destabilize the overall machine lifecycle.
+4. **Universal Anti-Evasion Invariant:** An agent must never conflate resetting domain variables (clearing state variables, domain metrics, or operational buffers) with transitioning the operational lifecycle state. Domain entity re-initialization must be decoupled from the target destination state.
+
+*Failure class: a state machine implements a reset routine that clears counters and sets the machine's state to an idle configuration state. When the operator or client sends an execution-start command, the dispatcher invokes the reset routine, trapping the system in an infinite circular loop where initiating work continuously resets the system back to idle.*
+
+---
+
+## Rule 48 — Asynchronous host subsystem buffer lifetime & deterministic non-blocking teardown invariants
+
+Across all asynchronous host subsystem boundaries, device controllers, direct memory access channels, and kernel queues:
+
+1. **Strict Buffer Instance Isolation & Memory Stability:** Memory buffers submitted to asynchronous host platform drivers, hardware queues, or kernel routines must be uniquely owned and isolated per in-flight transaction. Sharing or reusing a single memory buffer across concurrent asynchronous operations causes memory-lock contention, data corruption, and driver failure. Backing memory must remain pinned, stable, and invariant against relocation, resizing, or reallocation while in-flight operations are active.
+2. **Verified Release Before Reclamation:** An asynchronous request header, descriptor, or backing payload memory buffer must never be deallocated, recycled, or removed from active tracking collections merely because a completion flag or elapsed duration suggests completion. The implementation must invoke the platform's formal unregistration primitive and verify a successful return status confirming the host subsystem has completely relinquished lock ownership before destroying or recycling the underlying memory.
+3. **Asynchronous Teardown Polling Drain Loops:** Teardown and destruction routines must never abruptly terminate device handles or close subsystem channels while asynchronous transactions remain in flight. Teardown must issue an abort signal followed by a bounded asynchronous polling drain cycle with thread yield intervals, allowing underlying drivers and queues to transition pending buffers to completed states prior to handle destruction without deadlocking.
+4. **Universal Anti-Evasion Invariant:** Citing that an asynchronous driver has finished processing because a duration elapsed, a callback fired, or a status bit flipped is invalid without driver-level verification. Memory must remain pinned and valid until the host driver formally yields lock ownership.
+
+*Failure class: an asynchronous engine shares a single memory buffer across concurrent requests; submitting overlapping operations on the same address causes driver page-locking failures. On shutdown, the engine abruptly closes the driver handle while requests are still in flight, causing memory corruption or segmentation faults in the host kernel.*
+
+---
+
+## Rule 49 — Fail-closed pre-submission resource tracking & exception hardening invariants
+
+Across all resource handoffs to external subsystems, asynchronous execution contexts, or background worker queues:
+
+1. **Pre-Submission Ownership Registration:** When transferring raw pointers, descriptors, or native handles to external subsystems, host drivers, or asynchronous workers, the owning smart wrapper or tracking record must be inserted and registered into persistent management structures *prior* to executing the dispatch/submission call. Registration into shared tracking structures must be thread-safe to prevent race conditions with asynchronous completion callbacks.
+2. **Atomic Rollback on Submission Failure:** If container registration succeeds but the subsequent hardware or host submission call fails, the tracking structure must execute an immediate, deterministic rollback (releasing, unregistering, or removing the record) in the fail-closed error path to preserve invariant consistency.
+3. **Boundary Exception Safety:** Any dynamic allocation or collection insertion capable of throwing or failing must execute prior to submitting the unmanaged handle to the external driver, encapsulated within fail-closed boundary handlers in non-throwing contexts, ensuring that an allocation failure never leaves an unmanaged pointer in an external driver while its host object is destroyed.
+4. **Universal Anti-Evasion Invariant:** An agent must never submit a raw pointer or unmanaged descriptor to an asynchronous external subsystem with the intent of recording its ownership afterward. If the subsequent tracking registration throws or fails, the external subsystem retains a dangling pointer to unmanaged memory.
+
+*Failure class: an application allocates an I/O buffer, hands the raw memory pointer to an asynchronous operating system API, and then attempts to append the tracking structure to an internal list. When list insertion fails due to memory exhaustion, the tracking object is destroyed, freeing the buffer while the operating system continues to read/write to the address.*
+
+---
+
+## Rule 50 — Unconditional input state release & inter-modal priority arbitration
+
+In any event processing architecture, command dispatcher, or interactive subsystem handling discrete triggers and continuous input streams:
+
+1. **Unconditional State Release Invariant:** Event release handlers and lifecycle interruption boundaries must **unconditionally clear active intent and asserted state flags across all entity, client, and viewport buffers**. State release logic must never be conditionally gated on the current operating mode or application state, because switching modes or states while an input is active will orphan the release event and leave the input state permanently asserted.
+2. **Inter-Modal Priority Arbitration:** When multiple input modalities or control streams can influence the same target parameter, the dispatcher must enforce explicit priority arbitration. Discrete intentional actions must immediately override and suppress continuous stream updates; continuous tracking must only apply when discrete commands are not actively asserted.
+3. **Interruption & Boundary Reset:** Any lifecycle boundary transition must deterministically purge and reset all transient input queues and asserted state flags across 100% of buffers.
+4. **Universal Anti-Evasion Invariant:** An agent must never assume that an input release event occurs in the same state or mode in which the activation event occurred. Release and cleanup logic must be globally idempotent and state-agnostic.
+
+*Failure class: an input dispatcher conditionally clears an intent flag only if the system is in a specific operating mode. When the user changes modes while holding an input and subsequently releases it, the release handler skips clearing the flag, leaving the entity moving or executing indefinitely.*
+
+---
+
+## Rule 51 — Collinear & dead-center reflection perturbation invariants (anti-oscillation traps)
+
+In any kinematic simulation, optical model, numerical trajectory calculator, collision resolution pipeline, or boundary reflection model:
+
+1. **Collinear & Dead-Center Perturbation Invariant:** In any collision or reflection calculation between moving entities and boundaries, the resolution equations must never produce a degenerate zero tangential velocity or perfectly collinear normal trajectory ($v_{\text{tangential}} = 0$, $\theta_{\text{bounce}} = 0.0$) that eliminates multi-dimensional variance.
+2. **Minimum Physical Deflection Threshold:** If a calculated reflection angle or tangential velocity falls below a minimum stability threshold ($|\theta| < \epsilon$, where $\epsilon > 0$), the simulation must enforce a deterministic sign-preserving micro-deflection or non-zero perturbation:
+   $$\theta = \begin{cases} +\epsilon & \text{if } v_{\text{tangential}} \ge 0 \\ -\epsilon & \text{if } v_{\text{tangential}} < 0 \end{cases}$$
+3. **Mathematical Anti-Locking Verification:** The simulation model must mathematically guarantee that repeated reflections between opposing parallel boundaries or surfaces cannot enter an infinite, closed one-dimensional trajectory or dead-center oscillation without tangential variation.
+4. **Universal Anti-Evasion Invariant:** An agent must never assume that exact collinear or dead-center impacts are statistical edge cases that can be ignored. Discrete mathematical integration on quantized coordinates will reliably encounter exact midpoints and trigger permanent oscillation traps.
+
+*Failure class: a collision engine calculates bounce trajectories based on contact offset from a surface center. When an object hits the exact midpoint ($offset = 0.0$), the reflection formula yields zero tangential velocity, trapping the projectile in an infinite back-and-forth bounce along a single axis with zero deviation.*
+
+---
+
+## Rule 52 — Multi-entity dynamic system metric aggregation & zero single-entity bias
+
+In any software architecture, simulation model, or telemetry pipeline managing collections of dynamic entities:
+
+1. **Exhaustive Collection Metric Aggregation:** Status queries, telemetry reporting, user-facing metrics, and termination conditions in systems managing dynamic collections of homogeneous entities must aggregate across **all active entities in the collection** using formal reduction and aggregation algorithms over the entire active population.
+2. **Single-Entity Query Bias Prohibition:** Never query only the initial, root, or index-0 entity under the implicit assumption that only a single entity exists or that the first entity always represents the maximum, most recent, or authoritative state.
+3. **Dynamic Lifecycle Metric Synchronization:** When entities can be dynamically spawned, multiplied, or destroyed at runtime, all derived metrics must reflect the true global state across the entire living population without desynchronization, handling empty collections safely with standard identity values.
+4. **Universal Anti-Evasion Invariant:** An agent must never treat multi-entity configurations as auxiliary edge cases where single-entity indexing is sufficient. All metric evaluations must be collection-wide by default.
+
+*Failure class: a system spawns multiple concurrent tasks or dynamic entities, but its status monitoring function inspects only the first element in the collection. When the primary entity completes or is destroyed while secondary entities remain active and establish higher performance metrics, the monitoring system displays stale or zero values.*
 
 ---
 
