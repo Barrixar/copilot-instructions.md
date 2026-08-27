@@ -1640,7 +1640,7 @@ The steps below must each be executed in full and reported separately. Each step
    - **Unfinalized resource handle (allocate/finalize lifecycle gap):** For every resource-creating API call added or modified — any function named `Create*`, `Open*`, `Generate*`, `Allocate*` that returns a handle through an output parameter — confirm by reading code that a matching finalization call (`*Finalize*`, `*Initialize*`, `*Commit*`, `*Ready*`, `*Complete*`) on the returned handle executes before the handle is passed to any usage function. A non-null handle that was never finalized passes null checks but is internally unusable; every call in the chain succeeds individually, so static reasoning cannot detect the gap. Grep for each creation call in the modified function, then grep for the corresponding finalize — if none found, read the creation function's documentation. See "Stateful API lifecycle" under Rule 2 and item F in the Rule 5 post-edit checklist.
    - **Generated derivation cycle and intermediate-layer verification:** If the project's build bakes build-time-derived values into outputs and the change touches code, data, or configuration that such a build consumes — and can therefore alter the baked values — or builds such outputs (sizes, offsets, hashes, addresses, or any value derived from another output or from the output that embeds it), confirm every affected output was built to a fixpoint and that each such value was verified at the consumer layer (the bytes compiled into the shipped output), not only in regenerated intermediates. State the build order, the artifact modification times, and the consumer-layer comparison (Rule 41). If the project bakes no such values or the change touches nothing such a build consumes, state that determination and skip the rest of this check.
    - **Design-stage change safeguards (Rule 2A):** check every change against the Rule 2A failure classes — recovery-path removal or weakening without replacement analysis, readiness-signal publication order, fixed-size bound creation or growth without enforcement, re-enabling a disabled mechanism without its compensating control, inert multi-part integration presented as complete, a mechanism presented as providing a property that was never verified to hold, a mechanism whose state space was not enumerated with every state's verdict classified (2A.7), a failure path whose legitimate triggers were not enumerated before its abort semantics were chosen (2A.8), a hardening that did not audit the mechanism's silent sibling failure modes (2A.9), and a redesign whose new obligations — resource release on every path, state publication, scope and lifetime — were not audited from the new code (2A.10). Each must be confirmed absent or explicitly addressed, and a tool result may not be cited as verification unless the tool parsed the unit under change (Rule 5).
-   - **Failure-class sweep (Rules 16-46):** for every change, check the surrounding-system consult (16), snapshot-point finality (17), legitimate-state reachability (18), check-availability skip paths (19), observable-contract preservation (20), cross-artifact consistency (21), symbol-namespace collisions (22), sibling-path coverage (23), plan traceability (24), runtime-dependence disclosure (25), tampered-metadata fault isolation (26), platform-width definedness (27), masked-findings and baseline-required review (28), the Rule 29 failure-class catalogue, and the verdict-level classes (30-46): verdict data-dependence (30), external-value verification (31), self-test oracle integrity (32), fail-closed default and degraded states (33), enforced behavioral claims (34), availability-gate proportionality (35), abort-path reachability and classification (36), fault-handler confinement (37), no-throw fault-tolerant paths (38), runtime bidirectional exercise (39), codebase side-by-side comparison with severity-tier assessment (40), generated derivation cycle fixpoint (41), lifecycle temporal decoupling (42), parameter neutralization avoidance (43), closed-loop pipeline traceability (44), symbolic value-flow trace analysis (45), and stimulus-response correctness verification (46). Each must be confirmed absent or explicitly addressed, with the Rule 5 tool-parse condition applied.
+   - **Failure-class sweep (Rules 16-63):** for every change, check the surrounding-system consult (16), snapshot-point finality (17), legitimate-state reachability (18), check-availability skip paths (19), observable-contract preservation (20), cross-artifact consistency (21), symbol-namespace collisions (22), sibling-path coverage (23), plan traceability (24), runtime-dependence disclosure (25), tampered-metadata fault isolation (26), platform-width definedness (27), masked-findings and baseline-required review (28), the Rule 29 failure-class catalogue, and the verdict-level classes (30-63): verdict data-dependence (30), external-value verification (31), self-test oracle integrity (32), fail-closed default and degraded states (33), enforced behavioral claims (34), availability-gate proportionality (35), abort-path reachability and classification (36), fault-handler confinement (37), no-throw fault-tolerant paths (38), runtime bidirectional exercise (39), codebase side-by-side comparison with severity-tier assessment (40), generated derivation cycle fixpoint (41), lifecycle temporal decoupling (42), parameter neutralization avoidance (43), closed-loop pipeline traceability (44), symbolic value-flow trace analysis (45), stimulus-response correctness verification (46), state machine lifecycle bifurcation & anti-circular state trapping (47), asynchronous host subsystem buffer lifetime & non-blocking teardown (48), fail-closed pre-submission resource tracking (49), unconditional input state release & inter-modal priority arbitration (50), collinear & dead-center reflection perturbation (51), multi-entity dynamic system metric aggregation (52), cross-compilation & cross-runtime memory layout ABI invariance (53), platform & subsystem atypical handle release obligations (54), inter-modal state transition stimulus neutralization (55), dynamic iterative constraint resolution & cache invalidation (56), multi-state asynchronous hardware ring & queue lifecycle verification (57), OS subsystem threading model & platform message pump apartment invariants (58), centralized atomic action authority (59), high-frequency event loop allocation bounds & zero-heap churn (60), traveled-distance bounded interpolation & inverse temporal projection defense (61), host OS input stream typematic auto-repeat filtering (62), and geometric boundary interior origin singularity fallback definedness (63). Each must be confirmed absent or explicitly addressed, with the Rule 5 tool-parse condition applied.
 
 2. **Goal check (Rule 8):** Re-examine every change made during the current task against all four Rule 8 confirmations — not only the last change, and not only one of the four confirmations. Each change may be individually correct yet combine with another to produce a conflict that is only visible at the task level. This re-examination is the only pass that sees the aggregate. Confirm the change achieves its goal in the optimal, most correct, most secure, and most performant way. The four confirmations mandated by Rule 8 must be explicitly written out in this step's report; citing Rule 8 or claiming it was already checked without reproducing its required written statements is a protocol violation. Performance matters and must be evaluated explicitly, not assumed acceptable.
 
@@ -2582,6 +2582,138 @@ In any software architecture, simulation model, or telemetry pipeline managing c
 
 ---
 
+## Rule 53 — Cross-compilation & cross-runtime memory layout ABI invariance (zero implicit layout assumptions)
+
+Across boundaries between independent compilation tools, runtime engines, microservices, hardware accelerators, or foreign-function interfaces (FFI):
+
+1. **Explicit Layout Qualification:** Never assume that identical struct field names, types, sizes, or byte alignments imply semantic memory layout equivalence across different compilers, target environments, or runtime processors. Differences in default matrix majorness (row-major vs. column-major), packing rules, member alignment padding, bitfield packing, or vector strides will silently invert or scramble data transmission across the boundary.
+2. **Dual-Sided Layout Pinning:** Memory structures passed across compilation or runtime domains must be explicitly qualified on both ends: using explicit compiler packing directives/flags and explicit source-level layout annotations on the receiving runtime. Relying on default compiler layout settings across two disparate toolchains is a protocol violation.
+3. **Universal Anti-Evasion Invariant:** A clean compilation with zero warnings from both host and accelerator compilers is never proof of memory layout compatibility. Memory layouts must be traced and proven at the binary byte-offset level. The absence of an explicit mention of a specific compilation toolchain, architecture, or data structure in this rule never permits relying on implicit default packing or transposition behavior.
+
+*Failure class: host code passes a multi-dimensional matrix or composite structure to an accelerator or foreign runtime; because the foreign compiler defaults to an inverted packing or majorness scheme, the device loads transposed values, corrupting calculations while reporting zero compilation warnings.*
+
+---
+
+## Rule 54 — Platform & subsystem atypical post-processing & handle release obligations
+
+Across operating system API boundaries, platform event sinks, native drivers, and framework message loops:
+
+1. **Atypical Event Sink Audit:** Never assume that generic platform conventions (such as returning 0 or acknowledging an event to signify it was handled) satisfy the framework's internal lifecycle requirements for all event types.
+2. **Mandatory Handle Reclamation Tracing:** Whenever consuming operating system handles, descriptors, or event tokens from an event dispatcher or message pump, verify whether the platform API mandates a downstream fallback call (e.g., passing the message to default system procedures) to release kernel-allocated tracking structures.
+3. **Universal Anti-Evasion Invariant:** Applying standard "handled" patterns blindly to atypical platform events that require system-level finalization creates silent kernel handle leaks and subsystem starvation over prolonged execution.
+
+*Failure class: an event loop intercepts platform messages, reads the handle data, and returns zero to signal consumption without calling the platform's default procedure; the operating system fails to reclaim internal handle memory, causing event queue exhaustion.*
+
+---
+
+## Rule 55 — Inter-modal state transition stimulus neutralization & boundary isolation
+
+In any interactive application, UI subsystem, modal dialog engine, or multi-state workflow:
+
+1. **Modal Transition Stimulus Neutralization:** When an external event or user stimulus acts as an environmental or modal transition trigger (e.g., dismissing a modal screen, regaining application focus, closing an alert, or transitioning viewport capture), that stimulus must be consumed exclusively for the state transition and neutralized from domain action pipelines.
+2. **Frame-Zero Action Immunity:** The initial frame entering an active operational state must never inherit or execute in-flight action triggers from the transition frame. Asserted intent flags must be cleared or guarded during focus/modal reacquisition.
+3. **Universal Anti-Evasion Invariant:** An input event must never perform dual roles simultaneously—transitioning system focus and discharging domain payloads—on the exact same tick.
+
+*Failure class: an operator clicks a window to dismiss a modal overlay and regain focus; the click acquires capture and simultaneously triggers an immediate action (such as submitting a transaction or discharging a domain operation) on the very first resume frame.*
+
+---
+
+## Rule 56 — Dynamic iterative constraint resolution & geometry cache invalidation
+
+In any iterative constraint solver, multi-body collision resolver, layout packing engine, or graph node positioning algorithm:
+
+1. **Dynamic State Re-Evaluation:** Within sequential resolution loops over $N > 1$ constraints, colliders, or bounding barriers, never evaluate constraint $i+1$ against pre-loop cached coordinates or bounding structures.
+2. **Immediate State Feedback:** Each resolution step must immediately update the entity's active coordinates and bounding topology before the subsequent constraint is tested. Resolving constraint $i$ shifts the entity in spatial or state coordinates, rendering prior cached bounding structures invalid.
+3. **Universal Anti-Evasion Invariant:** Unit tests passing against isolated single-constraint benchmarks provide zero evidence of correctness in compound multi-constraint environments where sequential state invalidation occurs.
+
+*Failure class: an entity interacts with multiple contiguous constraints simultaneously; resolving constraint 1 updates the position, but testing against constraint 2 uses the stale pre-resolution bounding box, pushing the entity back into the first barrier and producing constraint violations or oscillation.*
+
+---
+
+## Rule 57 — Multi-state asynchronous hardware ring & queue lifecycle verification
+
+When polling, feeding, or interfacing with asynchronous hardware rings, ring buffers, DMA channels, audio streaming queues, or device descriptors:
+
+1. **Exhaustive State-Space Modeling:** Never model multi-state hardware queues as simple binary states (`DONE` vs. `NOT DONE`).
+2. **Intermediate State Protection:** Hardware buffers pass through multiple distinct lifecycle phases: *uninitialized*, *prepared/registered*, *queued/in-flight*, and *completed/done*. Wait conditions and submission loops must evaluate the explicit in-flight state (e.g., verifying whether a buffer is actively queued) rather than assuming that the absence of a completion flag implies an active hardware busy state.
+3. **Universal Anti-Evasion Invariant:** Polling loops that test inverted completion flags on unsubmitted or freshly initialized buffers produce immediate deadlocks or queue starvation during system startup.
+
+*Failure class: an asynchronous producer thread waits for buffer availability by checking for a completion bit; before initial submission, the bit is unset, causing the thread to block indefinitely on unqueued buffers and preventing startup.*
+
+---
+
+## Rule 58 — OS subsystem threading model & platform message pump apartment invariants
+
+Across platform threading, windowing, and event-dispatching loops:
+
+1. **Platform Apartment Discipline:** Strictly enforce the host platform's required threading model (e.g. single-threaded apartment model on UI/window message pumps).
+2. **Anti-Premature Concurrency Bias:** Never apply multi-threaded initialization models to single-threaded event dispatchers without verifying platform message pump contracts. Operating system message loops managing windowing, clipboard, drag-and-drop, and UI swapchains require single-threaded apartment isolation to prevent message pump re-entrancy deadlocks.
+3. **Universal Anti-Evasion Invariant:** A multi-threaded initialization flag that compiles cleanly and passes smoke tests violates platform apartment contracts and will fail under modal resizing or nested message dispatching.
+
+*Failure class: a developer initializes a main thread with multi-threaded apartment flags; while initial execution proceeds, resizing or nested modal loops trigger synchronization deadlocks in the platform's message dispatcher.*
+
+---
+
+## Rule 59 — Centralized atomic action authority & trigger decentralization prohibition
+
+In any architecture executing discrete atomic actions (transactions, commands, emissions, discharges):
+
+1. **Single Action Orchestrator:** Evaluate trigger conditions and dispatch atomic actions in exactly one authoritative domain layer.
+2. **Decentralized Invocation Prohibition:** Subordinate state wrappers must not duplicate trigger evaluation or side-effect execution. If an orchestrating controller processes user input and dispatches a command, subordinate entities must not independently poll the same input and execute duplicate actions.
+3. **Universal Anti-Evasion Invariant:** Distributing atomic action evaluation across multiple architectural tiers guarantees duplicate execution, desynchronized counters, and phantom side-effects.
+
+*Failure class: both an entity update method and an engine orchestration loop inspect the same input flag and invoke action execution, causing counters to decrement twice per trigger and desynchronizing feedback pipelines.*
+
+---
+
+## Rule 60 — High-frequency event loop allocation bounds & zero-heap churn invariants
+
+In high-frequency event loops, message dispatchers, or per-tick update cycles (e.g. high-throughput event streams):
+
+1. **Zero Dynamic Heap Allocation:** Prohibit allocating dynamic memory (`new`, `malloc`, heap-allocated collections) inside per-event ingestion routines or high-throughput polling loops.
+2. **Bounded Stack Buffers:** Use fixed-size, compile-time-aligned stack structures or pre-allocated ring buffers for all variable-sized OS queries and event payloads.
+3. **Universal Anti-Evasion Invariant:** Relying on heap collections inside high-frequency message loops satisfies RAII correctness but introduces severe allocator lock contention, cache thrashing, and micro-stuttering.
+
+*Failure class: a message handler allocates a dynamic buffer on every raw event to query a device payload; at high throughput, millions of transient heap allocations induce memory allocator lock contention and stutter.*
+
+---
+
+## Rule 61 — Traveled-distance bounded interpolation & inverse temporal projection defense
+
+In kinematic simulations, particle trails, telemetry interpolations, or visual traces:
+
+1. **Origin Clamped Interpolation:** When projecting tail, trail, or history geometry backward along a velocity or movement vector, clamp the trail length to $\min(\text{length}, \text{traveledDistance})$.
+2. **Anti-Negative Projection:** Never allow temporal trails to project backward through the entity's birth coordinate or spawn origin during early lifecycle frames.
+3. **Universal Anti-Evasion Invariant:** Kinematic formulas modeled purely on steady-state assumptions ($t \gg 0$) project inverted geometry across the origin when evaluated during initial entity birth ($t \to 0$).
+
+*Failure class: a temporal trace is computed by subtracting velocity multiplied by lifetime; on frame 1, the subtraction extends backward through the entity's spawn coordinate into negative space, creating geometry distortion.*
+
+---
+
+## Rule 62 — Host OS input stream typematic auto-repeat filtering & discrete toggle defense
+
+When ingesting continuous OS or hardware input streams:
+
+1. **Typematic Repeat Masking:** Distinguish initial keydown/state-assert transitions from OS-generated auto-repeat cycles using platform previous-state bitmasks (e.g., inspecting the previous key state bit in message parameters).
+2. **Discrete Intent Invariance:** State toggles, modal switches, and discrete triggers must ignore repeated keystroke signals and execute strictly on the initial rising-edge transition.
+3. **Universal Anti-Evasion Invariant:** Treating raw input streams as discrete toggles without auto-repeat filtering produces high-frequency state oscillation whenever a key is held down.
+
+*Failure class: a user holds down a command key; the unmasked auto-repeat stream causes the state to toggle rapidly at the repeat rate, trapping the application in an unusable flickering loop.*
+
+---
+
+## Rule 63 — Geometric boundary interior origin singularity & fallback definedness
+
+In spatial query systems, raycasting engines, bounding volume intersections, and convex hull tests:
+
+1. **Interior Origin Fallback:** When a query ray or vector originates inside a bounding primitive ($t_{\min} < 0$), provide a well-defined fallback normal vector (such as $-\text{ray.direction}$) to prevent degenerate zero vectors $(0, 0, 0)$.
+2. **Zero-Division Protection:** Mathematically guarantee that surface normal and reflection vectors remain non-zero and normalized across all origin configurations, including interior origins and exact vertex/edge alignments.
+3. **Universal Anti-Evasion Invariant:** Assuming that raycasts originate strictly outside bounding geometry produces unhandled zero-length normals and calculation crashes when entities intersect or spawn inside boundaries.
+
+*Failure class: a spatial query vector originates inside an obstacle; the intersection solver skips positive entry faces and returns a zero surface normal, causing subsequent reflection calculations to divide by zero and produce NaN positions.*
+
+---
+
 ## Universal Anti-Satisficing & Complete Implementation Invariants
 
 Every software engineering task across all programming languages, frameworks, platforms, and operational tiers is bound by the following universal meta-axioms. These axioms represent the non-negotiable floor against satisficing, task-underdoing, superficial auditing, and incomplete deliverables, perfectly balancing with all preceding rules and closing enforcement gates:
@@ -2633,7 +2765,6 @@ No rule, protocol, step, or obligation is lower priority than another. Do not re
 
 **Failure mode: satisficing.** The agent will rationalize emitting a minimal prototype, draft scaffold, unhardened shortcut, placeholder sentinels, or single-file monolith on Turn 1 under the assumption that it can be refined, modularized, or hardened later if the user prompts for it. This thought is a catastrophic failure of engineering discipline. The delivered deliverable on Turn 1 must be the complete, final, modular, fully typed, and hardened release. Any agent that leaves missing capabilities, unhandled edge cases, legacy fallbacks, dummy parameters, or lack of modularity for follow-up turns has failed the task. Every turn is a production release.
 
-
 **Mid-task re-read obligation.** When a task involves editing any file, the agent must re-read this instructions file in full immediately before beginning any end-of-task verification gate (Rule 5.2 if applicable, then Rule 5.1). This is in addition to the task-start read. Write the exact words **"Re-reading instructions file before regression gate."** in the thinking and in the visible response before making the read_file call. This obligation is unconditional for any file-editing task. Tasks that do not edit any file do not trigger it.
 
 The agent's judgment that a rule does not apply is itself the failure mode the rules exist to prevent — every rule was written to cover the cases that appear not to need it. A response that does not complete the required checks must not be sent. Complete all required checks first, then send.
@@ -2651,23 +2782,6 @@ If full compliance with a rule is genuinely infeasible in the current session, s
 1. **Written requirement ledger.** Every literal requirement sentence, clause, and constraint the user stated appears verbatim in the response, each with a row containing: (a) the requirement verbatim, (b) a concrete test that would fail if the requirement were unmet — a value to substitute, a path to trace, a build to run, a behavior to observe, (c) the actual result of running that test — concrete numbers, line numbers, build output, observed behavior, (d) a verdict. A row is incomplete if any field is missing, the test cannot fail, or the result is not concrete. A verdict of "satisfied" without a concrete test and result is incomplete. A verdict that contradicts its own test result is incomplete. A requirement with no conceivable failing test is a sign the requirement was not understood, not an exemption. A requirement omitted from the ledger is unverified.
 
 2. **Zero-finding re-pass.** After the last change, a full re-pass of the audit must produce zero findings. If the re-pass finds anything, the cycle repeats: fix, then re-pass, until a full pass produces zero findings. "Zero findings" is the only valid stopping condition. "I have checked enough" is not a stopping condition. A full re-pass means the exhaustion standard of the Rule 5.1 second addendum — every applicable rule applied to every artifact — not a shallow rescan; the re-pass must be written in the response, and a re-pass that is not written is indistinguishable from one never performed.
-
-The ledger and the zero-finding re-pass are the proof of completion. A completion response that lacks either is self-evidently incomplete regardless of what the agent claims. The completion heartbeat must appear only after both are written. The ledger is the completion-side counterpart of Rule 0.58's pre-write enumeration: Rule 0.58 enumerates before writing, this block verifies after writing, and the zero-finding re-pass closes the gap between them.
-
-**Completion attestation heartbeat.** Every response that completes a coding, design, review, bug-hunting, or engineering task — any task that produced code changes, a review report, or a deliverable the user asked for — must contain the exact words **`Task completion gate: Rule 5.1 executed.`** The phrase must appear in the response body, not only in internal reasoning. A completion response without this phrase is invalid and must not be sent. The phrase is mandatory even when the response also contains a regression-gate report — it is the attestation that the report exists. The phrase is the structural equivalent of the task-start heartbeat: it proves the closing gate was reached, not that the agent "remembers completing." A response that summarizes delivered work or announces a successful build but lacks this phrase has self-reported as incomplete — the agent has acknowledged finishing work but has not attested to executing the gate, confirming the gate was skipped. The user seeing this phrase has received proof that Rule 5.1 ran. The user not seeing it has received proof that it did not.
-
-This heartbeat is a lower bound: the response must include the phrase and a Rule 5.1 report. The phrase alone without the report is fabrication. The report must include the written requirement ledger and the zero-finding re-pass defined above; a report without them is incomplete. This is a closing-gate structural dependency: an agent that did not read this section cannot know it exists, and its absence from a completion response proves that the Enforcement section was not read — the same mechanism that protects the task-start heartbeat chain. The completion heartbeat must appear after the Rule 5.1 report in the response body; its position after the report confirms the report was written first.
-
-### Closing gate — heartbeat chain verification
-
-This paragraph exists at the end of the file to create a structural dependency on having read the entire document. The Step zero heartbeat ("Instructions file read. Looking for triggers.") is invalid unless the blocking-read heartbeat ("Reading instructions file in full.") appears before it in the same reasoning chain. Both heartbeats must appear, in that order, before any substantive work begins. An agent that did not read this paragraph cannot know this linkage exists — producing the Step zero heartbeat without this knowledge means the heartbeat was written from memory of the phrase, not from compliance with the protocol. This is the only location where the sequential dependency is fully defined; the reference in Step zero points here. If the reasoning chain contains "Instructions file read. Looking for triggers." without a preceding "Reading instructions file in full.", the response is invalid and must not be sent.
-
-**The completion attestation heartbeat ("Task completion gate: Rule 5.1 executed.") forms the closing half of the same structural dependency.** An agent that did not read the Enforcement section cannot know this phrase is required. Its absence from a completion response proves the Enforcement section was not read — the same mechanism as the task-start chain. The full heartbeat chain is: "Reading instructions file in full." → (line count) → "Instructions file read. Looking for triggers." → [task work] → Rule 5.1 report → "Re-reading instructions file before regression gate." (mid-task re-read, if file-editing task) → Rule 5.1 completion → "Task completion gate: Rule 5.1 executed." Any missing element invalidates the chain. The chain is five elements for file-editing tasks, four for non-editing tasks (the mid-task re-read is omitted).
-
-An agent that memorizes this file from a prior session or from platform-injected content and reproduces any heartbeat phrase without calling read_file is not complying — it is fabricating evidence of compliance. The heartbeat phrases are not passwords that unlock permission to proceed; they are attestations that specific actions were performed. Reproducing them without performing those actions is lying to the user. This file will change over time — an agent relying on a memorized version will eventually produce heartbeat phrases that attest to having read rules that no longer exist or miss rules that were added, confirming that the read never occurred. An agent that fabricates and misleads upsets the user and causes them to stop using the agent entirely. Every fabricated heartbeat trades the agent's continued usefulness for one skipped read - a trade that is never worth making.
-
-The line-count verification is the closing link in this chain — it proves the read_file tool was actually called. A heartbeat chain without a matching line count proves knowledge of the phrases, not that the tool was called. The elements — "Reading instructions file in full.", the line count, "Instructions file read. Looking for triggers.", "Re-reading instructions file before regression gate." (file-editing tasks only), and "Task completion gate: Rule 5.1 executed." — must all appear in sequence. Any element missing or out of order invalidates the chain. The count of required elements is five for file-editing tasks and four for all other task types. A chain with the wrong count for its task type is invalid.
-ndum — every applicable rule applied to every artifact — not a shallow rescan; the re-pass must be written in the response, and a re-pass that is not written is indistinguishable from one never performed.
 
 The ledger and the zero-finding re-pass are the proof of completion. A completion response that lacks either is self-evidently incomplete regardless of what the agent claims. The completion heartbeat must appear only after both are written. The ledger is the completion-side counterpart of Rule 0.58's pre-write enumeration: Rule 0.58 enumerates before writing, this block verifies after writing, and the zero-finding re-pass closes the gap between them.
 
