@@ -2527,6 +2527,63 @@ In any software architecture, simulation model, or telemetry pipeline managing c
 
 ---
 
+## Universal Engineering Invariants & Cognitive Anti-Satisficing Matrix
+
+Every software engineering task across all programming languages, frameworks, platforms, and operational tiers is bound by the following seven universal, project-agnostic meta-axioms. These axioms constitute the absolute non-negotiable floor of engineering discipline, synthesizing all 140 codified failure modes, architectural vulnerabilities, and security invariants into ironclad, evasion-proof mandates:
+
+1. **Axiom I: Epistemic Grounding, Zero-Recall Authority & Value Simulation**
+   - *Toolchain Acceptance $\neq$ Standards Compliance:* Compilers, linters, and interpreters accept legacy constructs and unhardened idioms for backward compatibility. Clean toolchain diagnostics and passing smoke builds verify syntactic parseability and type compatibility only—never idiomatic standard feature exhaustion, optimal design, or adherence to modernization constraints.
+   - *Zero Memory Recall of External Selectors:* Any external constant, bitmask, flag, enumeration ordinal, structure layout, or API signature that interfaces with an operating system, third-party library, protocol, or runtime subsystem must be verified against authoritative specifications, canonical headers, or documentation—never written from model training memory.
+   - *Concrete Value Flow Simulation:* Before asserting the absence of defects in any verification pass, the agent must statically trace at least one complete operational cycle substituting concrete representative and edge-case values through every formula, branch, and data transformation to prove observable end-to-end effect correctness.
+
+2. **Axiom II: Standard-Tier Exhaustion & Perimeter-to-Core Parity**
+   - *Pervasive Standard-Tier Exhaustion on Line 1:* When a language standard, platform tier, or runtime edition is targeted, all authored code across every module must exhaustively employ that standard's most expressive, type-safe, declarative, and robust facilities from the very first line authored. Emitting pre-standard baseline idioms under the rationalization of refining or modernizing later is strictly prohibited.
+   - *Perimeter-to-Core Micro-Logic Parity:* Subordinate helper functions, private closures, nested routines, and auxiliary utilities are held to the exact same architectural, type-safety, and modernization floor as public interfaces and primary execution loops.
+   - *Atomic Repository-Wide Sweeps:* Modernization, refactoring, and quality hardening must be executed atomically across 100% of affected workspace files in a single pass, validated through adversarial token-level negative-inference scans hunting for surviving legacy idioms.
+
+3. **Axiom III: Memory Safety, Checked Arithmetic & Type Hygiene**
+   - *Uninitialized State Elimination:* All scalar variables, heap allocations, aggregate struct buffers, and memory padding fields must be deterministically initialized or constructed with explicit values prior to any read operation, eliminating information leaks and undefined behavior.
+   - *Checked Allocation & Arithmetic:* Any arithmetic calculation that drives memory allocation sizes, buffer lengths, container capacities, or loop indices must enforce overflow checking prior to memory allocation or indexing to eliminate integer truncation and wrap-around heap corruption.
+   - *Safe Integer Sign & Width Conversions:* Mixed-width or mixed-signedness arithmetic, comparisons, and casts must enforce explicit safe conversion boundaries, eliminating truncation, sign confusion, and implicit narrowing bugs.
+   - *Type-Safe Bit Reinterpretation & Strict Alignment:* Reinterpreting bit representations across distinct types must use defined value-casting or memory copying mechanisms rather than unaligned raw pointer casts, preventing strict aliasing violations and hardware faults.
+   - *Bounded Views over Raw Pointer Offsets:* Memory and buffer interactions must operate exclusively through strongly-typed, bounds-checked span and slice abstractions with explicit length enforcement, prohibiting raw pointer arithmetic and unchecked strided index calculations.
+   - *Signed Coordinate & Discrete Metric Topologies:* All spatial, buffer offset, coordinate, cursor, viewport, and multi-dimensional geometric metrics must use signed integer types to prevent underflow wraparound on negative offsets or extended relative coordinate topologies.
+   - *Designated Aggregate Initialization & In-Out Parameter Hygiene:* Composite structures must be initialized using explicit designated field binding. Platform or runtime in-out structures must explicitly populate mandatory header sizing/version fields and zero-initialize state before invocation.
+   - *Heterogeneous Status Contract Discrimination:* Return values, error codes, and status descriptors must be evaluated against their exact native semantic contracts, strictly separating zero-success contracts from non-zero-success contracts and preventing status-inversion vulnerabilities.
+
+4. **Axiom IV: Lifecycle, Memory Ownership & Concurrency Safety**
+   - *Deterministic Single Ownership on Line 1:* All external resources, OS handles, network channels, execution contexts, and heap allocations must be bound to deterministic, move-only resource management wrappers immediately upon acquisition.
+   - *Infallible Cleanup Invariance:* Destructors, deallocators, and release routines must be unconditionally non-throwing and infallible, guaranteeing exception safety during unwinding.
+   - *Borrowed View & Reference Lifetime Hierarchy:* Non-owning views, slices, pointers, or borrowed references must have verified lifetimes strictly subordinated to the backing storage; returning references or non-owning views over local temporaries is strictly prohibited.
+   - *Multi-Stage Lifecycle Completion:* Stateful handles and interfaces requiring multi-stage initialization or commit transitions must complete all requisite lifecycle stages before being passed to consumer operations.
+   - *Asynchronous Memory Pinning & Transfer Safety:* Memory buffers passed to asynchronous worker threads, hardware DMA, or kernel drivers must remain pinned at immutable, stable memory locations for the entire duration of the active asynchronous operation, prohibiting move-transfers or reallocations while asynchronous references remain active.
+   - *TOCTOU & Atomic Resource Binding:* Validation and consumption of external resources, file descriptors, or concurrent states must execute atomically through locked handles or descriptors, eliminating time-of-check to time-of-use race conditions.
+   - *Explicit Concurrency Synchronization & Memory Ordering:* All concurrent state access must use formal atomic synchronization primitives with explicit acquire/release memory semantics rather than volatile flags, preventing data races and memory reordering hazards.
+   - *Non-Reentrant Diagnostic & Fault Handlers:* Logging, assertion, and fault-handling execution paths must carry thread-local re-entrancy protection to prevent unbounded call-stack recursion during error cascades.
+   - *Deterministic Subsystem Teardown:* Subsystem shutdown routines must drain pending task queues and synchronize asynchronous workers before releasing dependent shared runtime infrastructure.
+
+5. **Axiom V: Injection Immunity, Trust Boundary Invariance & Input Decoupling**
+   - *Data vs. Code Separation (Injection Immunity):* Untrusted or external input must never be interpolated directly into format strings, query interpreters, shell invocations, template engines, dynamic evaluators, or path constructors. All external parameter ingestion must use structured argument bindings, parameterized calls, or type-safe builders.
+   - *Format String & Code Execution Immunity:* Format strings and template patterns must strictly be compile-time constants or immutable templates; dynamic input must exclusively be bound as separate parameter values, eliminating arbitrary memory read/write and execution primitives.
+   - *Canonical Boundary Resolution:* File system and hierarchical path access must canonicalize and sandbox target paths against authorized base boundaries before resolution to eliminate traversal vulnerabilities.
+   - *Safe Dynamic Module & Plugin Loading:* Dynamic loading of executable modules, shared libraries, or external extensions must use explicit, absolute, or platform-hardened safe search paths and signature validation, prohibiting implicit current-working-directory search paths.
+   - *Decoupled Signal Multiplexing & State Ingestion:* When multiple concurrent inputs, event triggers, signals, or bindings map to a shared domain intent, ingestion must record raw activation states into an isolated channel store while logical intent is evaluated dynamically in the processing cycle. Deactivating one input channel must never cancel active intent while another channel asserting that intent remains active.
+   - *Entropy & Cryptographic Determinism:* Security tokens, identifiers, nonces, and randomized primitives must consume hardware-backed cryptographic entropy generators rather than unseeded or linear PRNGs.
+   - *Bi-Directional Filter Precision:* Security controls, validation predicates, and access boundaries must be verified against both legitimate edge inputs and malicious payloads to prevent false-positive erosion and unauthorized bypasses.
+
+6. **Axiom VI: Dynamical Control, Numerical Stability & Anti-Lock Invariants**
+   - *Sub-Stepped Numerical Integration & Exponential Decay:* Continuous state evolution, damping, and rate-limiting operations must use sub-stepped numerical integration and exponential decay rather than linear delta subtractions, ensuring mathematical stability and delta-time independence.
+   - *Dynamical State Clamping & Anti-Lock Perturbations:* Continuous and iterative state variables must enforce absolute mathematical bounding clamps ($O(1)$) to prevent tunneling or overflow. Transformations, feedback loops, or boundary reflections that can produce degenerate zero-variance or collinear trajectories must enforce deterministic non-zero perturbations to eliminate infinite limit cycles and harmonic deadlock.
+
+7. **Axiom VII: Non-Negotiable Gate Exhaustion & Zero-Residual Discipline**
+   - *Stopping on Rule-List Exhaustion:* An audit or verification pass is complete only when every applicable rule and failure class has been systematically evaluated against every touched artifact—never when the agent subjectively feels sufficient checking has occurred.
+   - *Whole-Workspace File Ledger:* All completion turns must provide a comprehensive multi-column verification ledger documenting every touched unit, inspected property, and verified defect count.
+   - *Zero Residual Toleration:* Documenting a defect, leaving a placeholder or TODO, or emitting an unhardened scaffold is strictly prohibited. Every deliverable must be 100% complete, modular, type-safe, and production-ready on Line 1.
+
+8. **Universal Anti-Evasion & Scope Binding Clause:** The axioms above govern universal algorithmic, structural, and systems paradigms. The absence of a specific framework, programming language, operating system, hardware device, API name, or code example from this document never permits bypassing, relaxing, or narrowing the scope of any axiom. Every requirement applies unconditionally to the entire functional and architectural class it defines.
+
+---
+
 ## Enforcement
 
 These rules are not suggestions. Every rule, protocol, step, and obligation applies to every task. If any step required by any rule has not been completed — for every item in the current task, for any reason, including a judgment that it was inapplicable — stop and complete it before sending the response. Completeness is the mandate, not speed.
