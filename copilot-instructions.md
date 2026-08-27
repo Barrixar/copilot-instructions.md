@@ -897,24 +897,24 @@ The mandatory behavior:
 
 ### Rule 0.58 fifty-eighth addendum — Universal Signed Coordinate Integrity & Extended Topology Ingestion Invariant (Anti-Unsigned Coordinate Truncation)
 
-Treating spatial coordinates, dimensional offsets, pointer vectors, event offsets, or layout positions as unsigned scalars, or applying unsigned bit-extraction operations at event ingestion or boundary deserialization interfaces, is strictly prohibited.
+Treating spatial coordinates, dimensional offsets, vector components, event offsets, or layout positions as unsigned scalars, or applying unsigned bit-extraction operations at event ingestion or boundary deserialization interfaces, is strictly prohibited.
 
 The mandatory behavior:
-1. **Signed Spatial Representation:** All spatial ingestion, multi-viewport topology mapping, coordinate decoding, and event parameter unpacking must preserve numerical signedness and accommodate negative coordinate domains across extended topologies where auxiliary coordinate spaces extend into negative ranges relative to the origin.
+1. **Signed Spatial Representation:** All spatial ingestion, multi-context topology mapping, coordinate decoding, and event parameter unpacking must preserve numerical signedness and accommodate negative coordinate domains across extended topologies where auxiliary coordinate spaces extend into negative ranges relative to the origin.
 2. **Signed Event Payload Extraction:** Platform event unpacking, serialization parsing, and raw parameter extraction must use signed traits, signed arithmetic, or signed extraction facilities that correctly sign-extend packed integer coordinates rather than unsigned bitmasking or unsigned bit-shifting.
 3. **Full-Range Coordinate Bounds Safety:** Transformation pipelines, coordinate normalization routines, spatial mappers, and event dispatchers must support the full signed numerical range of the host environment without wrapping, overflowing, or truncating negative coordinates to zero or large positive values.
-4. **Universal Class Invariant & Anti-Evasion Invariant:** This invariant applies universally across all event dispatchers, spatial UI frameworks, input ingestion subsystems, coordinate transformers, serialization parsers, and presentation layout engines across all programming languages and platforms.
+4. **Universal Class Invariant & Anti-Evasion Invariant:** This invariant applies universally across all event dispatchers, layout systems, stream decoders, coordinate transformers, serialization parsers, and spatial positioning subsystems across all programming languages and platforms.
 
 *Failure class: the agent extracts packed coordinate payloads using unsigned extraction routines, treating negative coordinates in extended topology domains as large positive unsigned integers, causing spatial coordinates to corrupt or jump discontinuously.*
 
 ### Rule 0.58 fifty-ninth addendum — Contextual & Nearest-Topology Query Resolution Invariant (Anti-Global-Default Fallacy)
 
-Defaulting to arbitrary global, primary, or nominal context identifiers when querying spatial topologies, hardware configurations, presentation boundaries, display targets, or runtime environments is strictly prohibited.
+Defaulting to arbitrary global, primary, or nominal context identifiers when querying spatial topologies, hardware configurations, boundary geometries, target contexts, or runtime environments is strictly prohibited.
 
 The mandatory behavior:
-1. **Dynamic Contextual Resolution:** All spatial, presentation, display, device, node, or hardware context queries must resolve dynamically against the active entity's, window's, container's, or viewport's nearest occupying local context or boundary geometry rather than hardcoding static global, primary, or origin-default identifiers.
-2. **Multi-Context Topology Preservation:** State transitions, mode toggles, presentation target updates, and topology migrations must preserve placement on the currently occupied local context or device node without unexpectedly relocating across topological boundaries.
-3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies across all multi-display environments, distributed rendering contexts, multi-window architectures, device clusters, and virtualized canvas layouts across all platforms and toolchains.
+1. **Dynamic Contextual Resolution:** All spatial, environmental, device, node, or hardware context queries must resolve dynamically against the active unit's, container's, window's, or execution node's nearest occupying local context or boundary geometry rather than hardcoding static global, primary, or origin-default identifiers.
+2. **Multi-Context Topology Preservation:** State transitions, mode toggles, target context updates, and topology migrations must preserve placement on the currently occupied local context or device node without unexpectedly relocating across topological boundaries.
+3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies across all multi-display environments, distributed execution contexts, multi-window architectures, device clusters, and virtualized container layouts across all platforms and toolchains.
 
 *Failure class: the agent queries host environment geometry using primary-target fallback constants instead of nearest-context resolution, causing entities undergoing mode transitions on secondary contexts to relocate unexpectedly to the primary context.*
 
@@ -939,7 +939,7 @@ The mandatory behavior:
 3. **Atomic State Evaluation & Transformation:** State modifications must inspect the current canonical state atomically at the point of transformation, apply the delta to the platform descriptor, and verify the resulting state without relying on cached assumptions.
 4. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies universally across all state managers, hardware context controllers, session coordinators, and external device abstractions across all programming languages and platforms.
 
-*Failure class: the agent tracks external presentation or device state with an auxiliary boolean flag which desynchronizes when external system events or hotkeys alter the underlying host attributes, causing subsequent operations to misjudge the actual state.*
+*Failure class: the agent tracks external state with an auxiliary boolean flag which desynchronizes when external system events, host signals, or asynchronous callbacks alter the underlying host attributes, causing subsequent operations to misjudge the actual state.*
 
 ### Rule 0.58 sixty-second addendum — Universal Designated Aggregate Member Initialization Invariant (Anti-Positional Struct Ambiguity)
 
@@ -959,7 +959,7 @@ Passing uninitialized stack variables, indeterminate memory, or unverified initi
 The mandatory behavior:
 1. **Authoritative Directionality Audit:** Every argument passed to external, operating system, or library interfaces must be audited against authoritative documentation to determine whether it functions as input-only, output-only, or dual input/output (`[in, out]`).
 2. **Deterministic Pre-Initialization:** When an API accepts an in-out parameter (such as a task identifier, buffer size capacity, state index, or protocol version header), the variable must be explicitly initialized to the required initial baseline value (such as zero for new handle allocation or explicit buffer length) before address acquisition.
-3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies universally across all system calls, device drivers, audio/graphics services, threading frameworks, and C-ABI library boundaries across all programming languages and platforms.
+3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies universally across all system calls, device drivers, runtime services, hardware abstraction layers, communication middleware, threading frameworks, and C-ABI library boundaries across all programming languages and platforms.
 
 *Failure class: the agent passes a pointer to an uninitialized stack scalar to an in-out API parameter, causing the platform service to read stack garbage as an active task/session identifier and fail or behave erratically.*
 
@@ -973,6 +973,26 @@ The mandatory behavior:
 3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies universally across all operating system interfaces, protocol stacks, runtime services, and external libraries across all programming languages and platforms.
 
 *Failure class: the agent evaluates a platform API returning an error code with a naive boolean check, treating a non-zero error code as success, or evaluates a structured status code with an integer equality comparison rather than the platform's standard success predicate, inverting error handling.*
+
+### Rule 0.58 sixty-fifth addendum — Universal Multi-Tier Defect Falsification, Boundary Stress Invariant & Anti-Passive-Scan Invariant (Prohibition of Surface-Level Bug Clearance)
+
+Conducting passive, surface-level code browsing, inspecting only for immediate syntax errors, typos, or compiler diagnostic triggers, and declaring code defect-free because it appears structured, compiles cleanly, or executes nominally is strictly prohibited. An agent must never commit the **Surface-Plausibility Confirmation Bias** — assuming that syntactically valid, compiling, or nominally executing code is free of latent defects, asymptotic edge-case breakdowns, numerical instabilities, concurrency hazards, resource leaks, lifecycle state corruptions, or boundary contract breaches.
+
+The mandatory behavior:
+1. **Universal Adversarial Defect Falsification:** When auditing, verifying, or refactoring code for defects of any kind, the agent must treat every module, component, function, algorithm, mathematical computation, state coordinator, data pipeline, and boundary interface as containing latent defects until proven resilient through active adversarial falsification across all universal defect dimensions:
+   - *Numerical, Mathematical & Precision Invariants:* Division by zero, modulo by zero, domain violations in mathematical operations (such as negative roots, invalid logarithmic inputs, or inverse trigonometric inputs outside domain bounds), NaN and infinity generation or unchecked propagation, floating-point precision loss, catastrophic cancellation, accumulator and counter overflow/underflow, subnormal/denormalized numeric stalls, narrowing truncation anomalies, and floating-point comparison hazards.
+   - *Concurrency, Threading & Asynchronous Lifecycles:* Race conditions, data races, unsynchronized shared mutable state, unpinned or invalidated memory buffers referenced across asynchronous execution contexts, memory ordering violations, torn reads/writes, lock contention/deadlock/livelock, missed or spurious asynchronous notifications, uncoordinated thread/worker termination, and missing memory visibility barriers.
+   - *Lifecycle Transitions, Context Shifts & Interruption Invariants:* Unhandled state machine transitions, unserviced event queues, persistent or stuck intent/signal states following context loss or activation shifts, degenerate boundary dimensions (such as zero-capacity, zero-dimension, or negative-dimension boundaries), dynamic environment metric or density shifts, asynchronous resource revocation/context loss during execution, out-of-bounds spatial/index coordinates, discontinuous state mutations, and resumption from stale or un-synchronized baseline states.
+   - *Resource Lifetimes, Descriptors & Memory Safety:* Unreleased host handles, descriptors, or allocated buffers on early exit or exceptional paths, out-parameter overwrite leakage, move-after-use, double disposal/deallocation, use-after-free (CWE-416), dangling references/pointers, uninitialized variable access, and destruction ordering inversions in dependent resource stacks.
+   - *External Platform, Protocol & API Contract Adherence:* Heterogeneous status/return-value signaling conventions (conflating boolean success, zero/non-zero error codes, and structured status masks), signed versus unsigned coordinate/index packing, architecture-width safety across scalar/pointer conversions, runtime scaling virtualization, and direct derivation from authoritative canonical platform descriptors rather than desynchronized shadow variables.
+   - *Algorithmic Integrity & Control Flow Exhaustiveness:* Unhandled enumeration variants or domain states, off-by-one loop boundaries, inverted boolean logic, operator precedence/associativity flaws, dead code, infinite execution loops, unhandled fallback branches, and accidental control flow fallthrough.
+2. **Mandatory Boundary Stressing & Asymptotic Value Invariant:** Every algorithm, state transformation, calculation, buffer processor, mapping routine, and event handler must be mathematically and logically stress-tested against asymptotic, extreme, and degenerate boundary conditions (including zero temporal duration deltas, asymptotic extreme values, zero-capacity buffers, zero/negative dimensional extents, maximum-rate simultaneous signals, contradictory state inputs, sudden runtime context revocation, and asynchronous buffer underflow/overflow).
+3. **Prohibition of "Clean Toolchain / Nominal Test Execution" as Defect-Free Proof:** A clean build, absence of compiler/linter warnings at maximum strictness, and passing test suites under nominal conditions are baseline technical requirements, NEVER evidence of the absence of bugs. Latent defects, numerical breakdowns, and race hazards routinely hide behind nominal execution paths.
+4. **Concrete Verification Artifact Requirement:** A verdict that a function, module, or repository is defect-free is invalid and prohibited without recording the explicit boundary values, mathematical substitution limits, state transition matrices, and lifecycle traces tested against it. Summarized or generalized statements of "checked and verified" without concrete artifacts are void under Rule 0.59 addendum.
+5. **Whole-Workspace Atomic Defect Remediation:** When an audit reveals any defect or vulnerability, the agent must immediately apply minimal, surgical, high-quality, and robust fixes across 100% of affected files across the repository in an immediate atomic pass, ensuring zero regressions.
+6. **Universal Anti-Evasion & Anti-Example-List Invariant:** Every category, dimension, mathematical symbol, or failure class described in this rule is illustrative of the general defect class, NOT an exhaustive closed set. An agent must never argue or reason that an unhardened construct, unhandled edge case, or latent bug is exempt because its specific data type, algorithm name, platform API, or variable identifier was not explicitly listed. Silence in a prompt or specification never permits omitting boundary validation or defect falsification.
+
+*Failure class: the agent inspects a routine, notes that it compiles cleanly and functions under standard nominal inputs, and asserts no bugs exist, failing to test what occurs under degenerate boundary conditions (such as zero interval deltas, degenerate dimensions, or sudden context loss).*
 
 ---
 
