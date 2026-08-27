@@ -895,6 +895,85 @@ The mandatory behavior:
 
 *Failure class: the agent inspects an external platform API call, notes that it compiles cleanly with zero diagnostic warnings and functions as expected, but fails to realize the call utilizes a legacy single-purpose interface that has been officially superseded by a modern, unified, or feature-complete platform facility.*
 
+### Rule 0.58 fifty-eighth addendum — Universal Signed Coordinate Integrity & Extended Topology Ingestion Invariant (Anti-Unsigned Coordinate Truncation)
+
+Treating spatial coordinates, dimensional offsets, pointer vectors, event offsets, or layout positions as unsigned scalars, or applying unsigned bit-extraction operations at event ingestion or boundary deserialization interfaces, is strictly prohibited.
+
+The mandatory behavior:
+1. **Signed Spatial Representation:** All spatial ingestion, multi-viewport topology mapping, coordinate decoding, and event parameter unpacking must preserve numerical signedness and accommodate negative coordinate domains across extended topologies where auxiliary coordinate spaces extend into negative ranges relative to the origin.
+2. **Signed Event Payload Extraction:** Platform event unpacking, serialization parsing, and raw parameter extraction must use signed traits, signed arithmetic, or signed extraction facilities that correctly sign-extend packed integer coordinates rather than unsigned bitmasking or unsigned bit-shifting.
+3. **Full-Range Coordinate Bounds Safety:** Transformation pipelines, coordinate normalization routines, spatial mappers, and event dispatchers must support the full signed numerical range of the host environment without wrapping, overflowing, or truncating negative coordinates to zero or large positive values.
+4. **Universal Class Invariant & Anti-Evasion Invariant:** This invariant applies universally across all event dispatchers, spatial UI frameworks, input ingestion subsystems, coordinate transformers, serialization parsers, and presentation layout engines across all programming languages and platforms.
+
+*Failure class: the agent extracts packed coordinate payloads using unsigned extraction routines, treating negative coordinates in extended topology domains as large positive unsigned integers, causing spatial coordinates to corrupt or jump discontinuously.*
+
+### Rule 0.58 fifty-ninth addendum — Contextual & Nearest-Topology Query Resolution Invariant (Anti-Global-Default Fallacy)
+
+Defaulting to arbitrary global, primary, or nominal context identifiers when querying spatial topologies, hardware configurations, presentation boundaries, display targets, or runtime environments is strictly prohibited.
+
+The mandatory behavior:
+1. **Dynamic Contextual Resolution:** All spatial, presentation, display, device, node, or hardware context queries must resolve dynamically against the active entity's, window's, container's, or viewport's nearest occupying local context or boundary geometry rather than hardcoding static global, primary, or origin-default identifiers.
+2. **Multi-Context Topology Preservation:** State transitions, mode toggles, presentation target updates, and topology migrations must preserve placement on the currently occupied local context or device node without unexpectedly relocating across topological boundaries.
+3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies across all multi-display environments, distributed rendering contexts, multi-window architectures, device clusters, and virtualized canvas layouts across all platforms and toolchains.
+
+*Failure class: the agent queries host environment geometry using primary-target fallback constants instead of nearest-context resolution, causing entities undergoing mode transitions on secondary contexts to relocate unexpectedly to the primary context.*
+
+### Rule 0.58 sixtieth addendum — Managed Smart Handle Out-Parameter Lifecycle Safety Invariant (Anti-Out-Pointer Overwrite Leakage)
+
+Passing the memory address of an encapsulated smart pointer, managed handle, or reference-counted wrapper directly to external out-parameter initialization, factory, or query APIs without deterministically releasing or clearing any preexisting held resource prior to address acquisition is strictly prohibited.
+
+The mandatory behavior:
+1. **Deterministic Pre-Release on Out-Parameter Assignment:** When an external platform API, factory routine, or query function populates a managed handle or reference-counted pointer through an out-pointer parameter, the caller must use explicit release-and-acquire accessors that decrement the reference count or close any preexisting instance before returning the storage address for new assignment.
+2. **Elimination of Overwrite Leaks:** Bypassing release-and-acquire accessors by taking raw internal storage addresses on smart handles that may already contain initialized resources is strictly prohibited.
+3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies universally across all smart pointers, interface wrappers, reference-counted containers, managed system handles, and external C-ABI out-parameter factory interfaces across all programming languages and platforms.
+
+*Failure class: the agent passes the raw internal storage address of a smart pointer to a factory query API without releasing the currently held instance, overwriting the pointer and leaking the previously allocated resource.*
+
+### Rule 0.58 sixty-first addendum — Canonical Platform Descriptor Evaluation Invariant (Anti-Shadow-State Desynchronization)
+
+Maintaining duplicate, auxiliary, or shadow mutable state variables (such as boolean mode flags or state trackers) that mirror platform, host, driver, or external subsystem state when the canonical state can be derived directly from the authoritative platform descriptor or bitmask is strictly prohibited.
+
+The mandatory behavior:
+1. **Stateless Canonical Derivation:** Subsystem state transitions, mode toggles, and condition evaluations that depend on host platform, operating system, or device attributes must evaluate active state directly from the authoritative platform descriptor, style bitmask, or hardware query rather than maintaining internal shadow state variables that can drift.
+2. **Elimination of Shadow Desynchronization:** When external events, operating system managers, shell interactions, hardware changes, or asynchronous callbacks can modify platform attributes independently of internal toggle methods, relying on internal shadow state creates desynchronization and is a defect.
+3. **Atomic State Evaluation & Transformation:** State modifications must inspect the current canonical state atomically at the point of transformation, apply the delta to the platform descriptor, and verify the resulting state without relying on cached assumptions.
+4. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies universally across all state managers, hardware context controllers, session coordinators, and external device abstractions across all programming languages and platforms.
+
+*Failure class: the agent tracks external presentation or device state with an auxiliary boolean flag which desynchronizes when external system events or hotkeys alter the underlying host attributes, causing subsequent operations to misjudge the actual state.*
+
+### Rule 0.58 sixty-second addendum — Universal Designated Aggregate Member Initialization Invariant (Anti-Positional Struct Ambiguity)
+
+Positional struct initialization or unstructured aggregate memory zeroing on external C-ABI structures, platform descriptors, operating system structs, and configuration records is strictly prohibited.
+
+The mandatory behavior:
+1. **Mandatory Designated Member Initialization:** All external data structures, parameter blocks, system descriptors, and aggregate types must be initialized using the target language standard's explicit designated member initializers, naming specific struct fields for size/length headers, type tags, and configuration values, guaranteeing deterministic structural binding and eliminating positional initialization ambiguity.
+2. **Structural Evolution Resilience:** Positional aggregate initialization that relies on the physical field order of external headers is fragile under header updates, platform version changes, and architectural padding shifts; designated initialization ensures field-level semantic correctness.
+3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies across all C-ABI boundaries, operating system descriptors, protocol structures, and external SDK interfaces across all programming languages and platforms.
+
+*Failure class: the agent initializes an external boundary structure with positional aggregate braces, which misaligns fields or fails to set header size parameters properly when structure layouts are updated across platform SDK revisions.*
+
+### Rule 0.58 sixty-third addendum — In-Out Parameter Initial-State Determinism & Boundary Argument Hygiene (Anti-Uninitialized In-Out Garbage Passing)
+
+Passing uninitialized stack variables, indeterminate memory, or unverified initial states to platform APIs, external functions, or driver calls where parameters operate with dual input/output (`[in, out]`) semantics is strictly prohibited.
+
+The mandatory behavior:
+1. **Authoritative Directionality Audit:** Every argument passed to external, operating system, or library interfaces must be audited against authoritative documentation to determine whether it functions as input-only, output-only, or dual input/output (`[in, out]`).
+2. **Deterministic Pre-Initialization:** When an API accepts an in-out parameter (such as a task identifier, buffer size capacity, state index, or protocol version header), the variable must be explicitly initialized to the required initial baseline value (such as zero for new handle allocation or explicit buffer length) before address acquisition.
+3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies universally across all system calls, device drivers, audio/graphics services, threading frameworks, and C-ABI library boundaries across all programming languages and platforms.
+
+*Failure class: the agent passes a pointer to an uninitialized stack scalar to an in-out API parameter, causing the platform service to read stack garbage as an active task/session identifier and fail or behave erratically.*
+
+### Rule 0.58 sixty-fourth addendum — Heterogeneous Status Contract & Return Semantics Invariant (Anti-Status-Inversion Fallacy)
+
+Conflating heterogeneous error-signaling conventions, or assuming that zero or non-zero return values uniformly represent success across disparate platform subsystems, is strictly prohibited.
+
+The mandatory behavior:
+1. **Authoritative Status Contract Verification:** The agent must verify the exact return contract of every platform, library, and system invocation against authoritative documentation, explicitly differentiating between boolean success flags (where non-zero represents success), standard error codes (where zero represents success), structured status codes (where specific bit patterns or masks indicate success/failure), and sentinel/invalid handle constants.
+2. **Explicit Idiomatic Status Validation:** Code must use explicit, idiomatic validation macros, strongly-typed predicate functions, or exact symbolic constants matching the specific interface contract rather than generic truthiness or naive zero/non-zero checks.
+3. **Universal Class Invariant & Anti-Evasion Invariant:** This requirement applies universally across all operating system interfaces, protocol stacks, runtime services, and external libraries across all programming languages and platforms.
+
+*Failure class: the agent evaluates a platform API returning an error code with a naive boolean check, treating a non-zero error code as success, or evaluates a structured status code with an integer equality comparison rather than the platform's standard success predicate, inverting error handling.*
+
 ---
 
 
