@@ -1,3 +1,6 @@
+**Instructions file compaction incoming in September 2026 (do not worry). It will be paired with a refactor to make the rules more agnostic to software project types.**
+==
+
 About this project, https://github.com/Barrixar/copilot-instructions.md/blob/main/copilot-instructions.md
 
 This is a drop-in file to be your "copilot-instructions.md" in [repository root]/.github (The folder called .github) which your IDE will load for AI chat interactions.
