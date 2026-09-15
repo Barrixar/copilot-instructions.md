@@ -1670,7 +1670,13 @@ The indirect case is the higher-risk one: when new code modifies a struct field,
 
 If the workspace contains reference material for any identified consuming function, read it before writing the modification. If not, search first (using file_search and grep_search with terms from the consuming function's name, struct type, and data flow context) before concluding it is absent. Stating a gap without searching is a protocol violation.
 
-### Stateful API lifecycle — allocate/finalize/use/destroy pattern
+### Reading a call site includes what the caller does with what it receives
+
+Reading the call site to learn the state the caller established before the call is necessary but not sufficient. For every call the change adds or alters, and for every refusal or early return the change introduces into a callee, also read what the caller does with the result of the call: the returned value, every output parameter, the state the callee was expected to produce, and every side effect the caller depends on afterwards. The question to answer is what the caller does when that artifact is absent, unchanged, or partially written. A caller that dereferences, formats, applies, passes on, publishes, or stores that artifact without an absence check consumes it unconditionally, and an unconditionally consumed artifact is a contract the callee's refusal path must satisfy (Rule 75).
+
+Where the call is indirect - through dispatch, registration, a callback, an interception or replacement mechanism, or an event pipeline - the consumer is not the visible call site but the mechanism and the code that mechanism hands the result to; all of them must be read. Where the change introduces a refusal into shared code, every consumer of that code is in scope, not only the caller whose behavior prompted the change. The consequence of a refusal is invisible from inside the refusing function: the refusal reads as correct, and the defect appears where the artifact was consumed.
+
+### Stateful API lifecycle — allocate/finalize/use/destroy pattern — allocate/finalize/use/destroy pattern
 
 When new code calls a function that creates a resource — any handle, key, context, session, or opaque pointer returned through an output parameter — do not assume the resource is immediately ready for use. Many platform APIs follow an allocate-then-finalize lifecycle: the creation call reserves memory or an internal slot, and a separate finalization call makes the resource usable. The agent's training data can be wrong or incomplete about which APIs require this extra step, and static analysis cannot detect its absence because every call in the chain succeeds individually.
 
@@ -1827,7 +1833,7 @@ In particular, when a check is added at one stage of a multi-stage operation, ve
 
 **A hardening change must not be marked complete until every sibling failure mode of the same mechanism has been named and its failure signal verified.**
 
-The sibling set must be derived from an explicit enumeration of every stage of the operation and every alternate path that can produce the mechanism's verdict — not from the failure modes that first come to mind; write that enumeration out in full in the response. A sibling asserted to be already verified elsewhere must be re-read at its actual site in this task before it counts as verified. This is distinct from 2A.7: 2A.7 requires a verdict for every state the mechanism will face; this rule requires that hardening one mode not leave another mode with a weaker failure signal.
+The sibling set must be derived from an explicit enumeration of every stage of the operation and every alternate path that can produce the mechanism's verdict — not from the failure modes that first come to mind; write that enumeration out in full in the response. A sibling asserted to be already verified elsewhere must be re-read at its actual site in this task before it counts as verified. This is distinct from 2A.7: 2A.7 requires a verdict for every state the mechanism will face; this rule requires that hardening one mode not leave another mode with a weaker failure signal. Rule 79 item 1 governs the signal for each reason a single check can fail; this rule governs the failure modes across the stages of a mechanism.
 
 *Failure class: a fix hardens the stage whose failure is loud (crash, exception, visible error) while the stage whose failure is silent (soft-pass, skip, default) is left unhardened, so the mechanism still fails open on the quiet path — and the quiet path is the one an attacker or a broken input reaches first.*
 
@@ -1845,6 +1851,14 @@ When a change redesigns or rewrites a function, mechanism, or component — a re
 A fix that changes the design is a redesign for this purpose (see Rule 0.9). The resource-release obligation here is the design-time counterpart of the post-edit unfinalized-handle check (Rule 5 item F); both must pass.
 
 *Failure class: a rewrite is reviewed for the defect it replaced while its own new obligations are never audited, so the rewrite ships a leak, a dangling state, or a wrong-generation read that the old design did not have.*
+
+---
+
+### 2A.11 - A new guard, refusal, or skip path is a design change with its own obligations
+
+Adding protection is adding behaviour, and behaviour has contracts. Before a guard, refusal, skip path, bounds test, or fallback is written, its subject and its obligations must be designed rather than discovered afterwards: (1) what it protects, in primitive terms (Rule 83 item 1); (2) the consuming side's contract on the refusal path (Rule 75); (3) the placement that dominates the first read of the guarded value (Rule 76); (4) the property the test must assert and the arithmetic that establishes it without wrapping (Rule 77); (5) the purity of the test on the path and at the frequency at which it runs (Rule 78); (6) the signal for every reason it can fail, and the claim that signal is allowed to make (Rule 79); (7) the sweep by mechanism that shows where else the same protection is required (Rule 80); (8) the precondition of any callee whose internal access the protection exists to guard (Rule 81); and (9) the form and single source of every bound the protection references (Rule 82). A change that adds protection without designing these nine items has added an untested control, and an untested control is indistinguishable from no control at the moment the hazardous input arrives.
+
+*Failure class: protection is designed as one conditional plus one message, so it tests the wrong property, sits after the read it was meant to prevent, changes state on a hot path, reports only part of its failure domain, and leaves the consuming side holding an artifact that was never produced - all while the change is reported as hardened.*
 
 ---
 
@@ -2012,6 +2026,22 @@ When re-reading any modified function or block under step 1, the following patte
 
 **U. Gated-activation runtime verdict (assumed-match check).** After any change that added or relied on a conditional activation — confirm the report records the gate's actual runtime verdict (matched, failed with signal, or not exercised) with its observation evidence. A mechanism reported as working without a recorded matched verdict is an unverified claim (Rule 0.58 ninety-first addendum).
 
+**V. Refusal-path output (abstain-without-fallback check).** After any change that adds a refusal, a guard, an early return, or a skipped operation - enumerate every such branch and confirm, by reading the consumer and, for indirect calls, the dispatch or interception mechanism that consumes the result, that the artifact the consuming side uses on that path is produced validly, or that absence is tolerated there. An early exit that leaves a consumed artifact unchanged, indeterminate, or partially formed is a defect even when the refusal itself is correct in isolation. Confirm any fallback value is one the consumer accepts and does not collide with a meaningful value of the same domain, and confirm the refusal is distinguishable on the channel the consumer branches on.
+
+**W. Guard dominance and placement (log-then-proceed check).** For every guard the change adds - confirm no statement on its failure path reads the value it validates, including diagnostic calls that format the value, accessor calls that re-read it, and any code after the guard in the same block; and confirm the guard precedes the first read or derivation of that value on every path that can reach the changed code, including reads performed inside the construction of any object built from it. A guard whose failure branch still permits the read it detected, or that sits after that read, protects nothing.
+
+**X. Region-membership and overflow-safe containment (weaker-property check).** For every value used to reach an element of a region - confirm the test asserts the property the access requires (membership with the live base and extent, and the alignment the encoding requires where applicable) rather than the absence of one disallowed value; that the containment arithmetic cannot wrap and that no operand's sign or magnitude is unvalidated; that membership is revalidated after any operation that can relocate, resize, free, or reallocate the region; and that values returned by or received from external code are validated before the first read of the element they name. State the arithmetic form and why it cannot wrap, and name the concrete invalid value the weaker test would have accepted.
+
+**Y. Predicate purity on live paths (action-in-predicate check).** For every predicate, guard, precondition, or admission check the change adds or newly reaches - list its side effects (state mutation, resource lifetime change, I/O, work submission, allocation whose failure or timing is observable, logging that can allocate, and any call that can re-enter the inspected subsystem) and confirm there are none on a live path, or that any exception is idempotent, bounded per operation, and provably cannot re-enter. Confirm the corrective action, if any, sits outside the predicate at a point where its lifecycle consequences are designed, and state the frequency at which the predicate runs.
+
+**Z. Composite-check reason coverage and claim honesty (partial-signal check).** For every check with more than one failure reason - enumerate the reasons and the signal emitted for each, and confirm no signal implies a coverage it does not have. For every behavioural claim the change makes in a comment, a description, or a report - name the code path that enforces it and confirm the path covers the claim's stated domain, including every quantifier (all callers, every branch, every state). A claim whose enforcing path was not read must be labelled an assumption or removed; a claim contradicted by the control flow in the same region is a defect.
+
+**AA. Mechanism-class sweep (wrapper-only-sweep check).** For every defect class the change fixes or guards - confirm the enumeration was performed on the primitive operation form with the search terms recorded, and that it covers inline forms of the same operation, sibling implementations of the same contract, generated or external paths, and callers that assemble the operands themselves. A search for the wrapper, helper, or idiom through which the class was first observed is a starting point only; record a per-site verdict with read evidence and an explicit statement of what remained unfound.
+
+**AB. Callee internal-access precondition (post-hoc-validation check).** For every callee the change calls that performs a computed access - confirm by reading the callee that the precondition its internal access requires is established before the call, that no wrapper or relay function was mistaken for that precondition, and that no fallback value introduced by the change is passed into a callee whose preconditions it violates. A result check performed after such a call cannot protect the access the call already performed.
+
+**AC. Guard-as-subject audit (unverified-guard check).** For every guard, refusal, predicate, bounds test, and fallback the change adds - confirm every question of Rule 83 has been answered in writing, each with the code element it refers to. A guard whose answers are absent is unverified regardless of how cleanly the change compiles or how the guard reads.
+
 ---
 
 ## Rule 5.1 — Proactive regression gate: mandatory at every task completion
@@ -2065,7 +2095,15 @@ The steps below must each be executed in full and reported separately. Each step
    - **Gated-activation runtime verdict:** If the change adds or relies on a conditional activation gated on runtime state, confirm the report records the gate's actual verdict (matched, failed with signal, or not exercised) with its observation evidence. A clean build is not evidence the gate matched, and a mechanism whose verdict is unrecorded must not be presented as working (the same class as the Rule 0.58 ninety-first addendum).
    - **Generated derivation cycle and intermediate-layer verification:** If the project's build bakes build-time-derived values into outputs and the change touches code, data, or configuration that such a build consumes — and can therefore alter the baked values — or builds such outputs (sizes, offsets, hashes, addresses, or any value derived from another output or from the output that embeds it), confirm every affected output was built to a fixpoint and that each such value was verified at the consumer layer (the bytes compiled into the shipped output), not only in regenerated intermediates. State the build order, the artifact modification times, and the consumer-layer comparison (Rule 41). If the project bakes no such values or the change touches nothing such a build consumes, state that determination and skip the rest of this check.
    - **Design-stage change safeguards (Rule 2A):** check every change against the Rule 2A failure classes — recovery-path removal or weakening without replacement analysis, readiness-signal publication order, fixed-size bound creation or growth without enforcement, re-enabling a disabled mechanism without its compensating control, inert multi-part integration presented as complete, a mechanism presented as providing a property that was never verified to hold, a mechanism whose state space was not enumerated with every state's verdict classified (2A.7), a failure path whose legitimate triggers were not enumerated before its abort semantics were chosen (2A.8), a hardening that did not audit the mechanism's silent sibling failure modes (2A.9), and a redesign whose new obligations — resource release on every path, state publication, scope and lifetime — were not audited from the new code (2A.10). Each must be confirmed absent or explicitly addressed, and a tool result may not be cited as verification unless the tool parsed the unit under change (Rule 5).
-   - **Failure-class sweep (Rules 16-74):** for every change, check the surrounding-system consult (16), snapshot-point finality (17), legitimate-state reachability (18), check-availability skip paths (19), observable-contract preservation (20), cross-artifact consistency (21), symbol-namespace collisions (22), sibling-path coverage (23), plan traceability (24), runtime-dependence disclosure (25), tampered-metadata fault isolation (26), platform-width definedness (27), masked-findings and baseline-required review (28), the Rule 29 failure-class catalogue, and the verdict-level classes (30-74): verdict data-dependence (30), external-value verification (31), self-test oracle integrity (32), fail-closed default and degraded states (33), enforced behavioral claims (34), availability-gate proportionality (35), abort-path reachability and classification (36), fault-handler confinement (37), no-throw fault-tolerant paths (38), runtime bidirectional exercise (39), codebase side-by-side comparison with severity-tier assessment (40), generated derivation cycle fixpoint (41), lifecycle temporal decoupling (42), parameter neutralization avoidance (43), closed-loop pipeline traceability (44), symbolic value-flow trace analysis (45), stimulus-response correctness verification (46), state machine lifecycle bifurcation & anti-circular state trapping (47), asynchronous host subsystem buffer lifetime & non-blocking teardown (48), fail-closed pre-submission resource tracking (49), unconditional input state release & inter-modal priority arbitration (50), collinear & dead-center reflection perturbation (51), multi-entity dynamic system metric aggregation (52), cross-compilation & cross-runtime memory layout ABI invariance (53), platform & subsystem atypical handle release obligations (54), inter-modal state transition stimulus neutralization (55), dynamic iterative constraint resolution & cache invalidation (56), multi-state asynchronous hardware ring & queue lifecycle verification (57), OS subsystem threading model & platform message pump apartment invariants (58), centralized atomic action authority (59), high-frequency event loop allocation bounds & zero-heap churn (60), traveled-distance bounded interpolation & inverse temporal projection defense (61), host OS input stream typematic auto-repeat filtering (62), and geometric boundary interior origin singularity fallback definedness (63), cross-boundary state observer connectivity (64), re-entrancy guard purpose preservation (65), ambient-condition entry-point containment (66), and guarded-invocation exhaustion (67), asymmetric keying and quirk-verdict re-derivation (68), symptom-guarded systemic defects (69), synthetic fallback payloads (70), unchecked decode results (71), payload-identity keying (72), exemplar-citation partial audits (73), positional-ordinal drift (74), patch-site and trampoline resume boundary arithmetic (Rule 0.58 seventy-eighth addendum), raw-memory scan candidate property validation (Rule 0.58 seventy-ninth addendum), global last-event store freshness (Rule 0.58 eightieth addendum), effect-class channels in linked foreign binaries (Rule 0.58 eighty-first addendum), pre-write byte derivation for binary-position constants (Rule 0.58 eighty-second addendum), guard-pattern completeness (Rule 0.58 eighty-third addendum), conditional-activation non-activation signals (Rule 0.58 eighty-fourth addendum), optional-component degradation preservation (Rule 0.58 eighty-fifth addendum), derived-verification re-derivability (Rule 0.58 eighty-sixth addendum), position-constant coordinate-transform completeness (Rule 0.58 eighty-seventh addendum), shared-artifact producer-set exhaustion (Rule 0.58 eighty-eighth addendum), inter-convention unwind boundary safety (Rule 0.58 eighty-ninth addendum), verification-claim property exactness (Rule 0.58 ninetieth addendum), and gated-activation runtime verdict recording (Rule 0.58 ninety-first addendum). Each must be confirmed absent or explicitly addressed, with the Rule 5 tool-parse condition applied.
+   - **Refusal-path output:** If the change adds a refusal, guard, early return, or skipped operation, confirm the artifact the consuming side uses on that path is produced validly or its absence is tolerated, by reading the consumer including any dispatch or interception mechanism (the same class as Rule 75 and Rule 5 checklist V).
+   - **Guard dominance and placement:** If the change adds a guard, confirm no statement on its failure path reads the guarded value and that the guard precedes the first read or derivation of that value, including reads inside constructors, factories, and wrappers built from it (the same class as Rule 76 and Rule 5 checklist W).
+   - **Region-membership test strength:** If the change validates a value used to reach an element of a region, confirm the test asserts membership with the live base and extent, that the arithmetic cannot wrap, that no operand is unvalidated, that membership is revalidated after relocation or resize, and that externally returned values are validated before the first read of the element (the same class as Rule 77 and Rule 5 checklist X).
+   - **Predicate purity:** If the change adds or newly reaches a predicate, guard, or precondition on a live path, confirm it has no side effect there - no state change, lifetime change, I/O, submission, observable allocation, or re-entry into the inspected subsystem - and that any corrective action sits outside it (the same class as Rule 78 and Rule 5 checklist Y).
+   - **Composite-check reason coverage and claim honesty:** If the change adds a check with more than one failure reason, confirm every reason is signalled without implying broader coverage, and for every behavioural claim in the change, name the enforcing path and confirm it covers the claim's stated domain (the same class as Rule 79 and Rule 5 checklist Z).
+   - **Mechanism-class sweep:** If the change fixes or guards a defect class, confirm the sweep enumerated the primitive operation form across inline forms, sibling implementations, generated and external paths, and callers that assemble the operands, with the search terms and per-site verdicts recorded (the same class as Rule 80 and Rule 5 checklist AA).
+   - **Callee internal-access precondition:** If the change calls a callee that performs a computed access internally, confirm the precondition that access requires was established before the call, that no wrapper or relay was mistaken for it, and that no fallback value violates it (the same class as Rule 81 and Rule 5 checklist AB).
+   - **Guard-as-subject audit:** For every guard, refusal, predicate, bounds test, and fallback the change adds, confirm every Rule 83 question was answered in writing with the code element each refers to; an unanswered guard is unverified (the same class as Rule 83 and Rule 5 checklist AC).
+   - **Failure-class sweep (Rules 16-74):** for every change, check the surrounding-system consult (16), snapshot-point finality (17), legitimate-state reachability (18), check-availability skip paths (19), observable-contract preservation (20), cross-artifact consistency (21), symbol-namespace collisions (22), sibling-path coverage (23), plan traceability (24), runtime-dependence disclosure (25), tampered-metadata fault isolation (26), platform-width definedness (27), masked-findings and baseline-required review (28), the Rule 29 failure-class catalogue, and the verdict-level classes (30-74): verdict data-dependence (30), external-value verification (31), self-test oracle integrity (32), fail-closed default and degraded states (33), enforced behavioral claims (34), availability-gate proportionality (35), abort-path reachability and classification (36), fault-handler confinement (37), no-throw fault-tolerant paths (38), runtime bidirectional exercise (39), codebase side-by-side comparison with severity-tier assessment (40), generated derivation cycle fixpoint (41), lifecycle temporal decoupling (42), parameter neutralization avoidance (43), closed-loop pipeline traceability (44), symbolic value-flow trace analysis (45), stimulus-response correctness verification (46), state machine lifecycle bifurcation & anti-circular state trapping (47), asynchronous host subsystem buffer lifetime & non-blocking teardown (48), fail-closed pre-submission resource tracking (49), unconditional input state release & inter-modal priority arbitration (50), collinear & dead-center reflection perturbation (51), multi-entity dynamic system metric aggregation (52), cross-compilation & cross-runtime memory layout ABI invariance (53), platform & subsystem atypical handle release obligations (54), inter-modal state transition stimulus neutralization (55), dynamic iterative constraint resolution & cache invalidation (56), multi-state asynchronous hardware ring & queue lifecycle verification (57), OS subsystem threading model & platform message pump apartment invariants (58), centralized atomic action authority (59), high-frequency event loop allocation bounds & zero-heap churn (60), traveled-distance bounded interpolation & inverse temporal projection defense (61), host OS input stream typematic auto-repeat filtering (62), and geometric boundary interior origin singularity fallback definedness (63), cross-boundary state observer connectivity (64), re-entrancy guard purpose preservation (65), ambient-condition entry-point containment (66), and guarded-invocation exhaustion (67), asymmetric keying and quirk-verdict re-derivation (68), symptom-guarded systemic defects (69), synthetic fallback payloads (70), unchecked decode results (71), payload-identity keying (72), exemplar-citation partial audits (73), positional-ordinal drift (74), patch-site and trampoline resume boundary arithmetic (Rule 0.58 seventy-eighth addendum), raw-memory scan candidate property validation (Rule 0.58 seventy-ninth addendum), global last-event store freshness (Rule 0.58 eightieth addendum), effect-class channels in linked foreign binaries (Rule 0.58 eighty-first addendum), pre-write byte derivation for binary-position constants (Rule 0.58 eighty-second addendum), guard-pattern completeness (Rule 0.58 eighty-third addendum), conditional-activation non-activation signals (Rule 0.58 eighty-fourth addendum), optional-component degradation preservation (Rule 0.58 eighty-fifth addendum), derived-verification re-derivability (Rule 0.58 eighty-sixth addendum), position-constant coordinate-transform completeness (Rule 0.58 eighty-seventh addendum), shared-artifact producer-set exhaustion (Rule 0.58 eighty-eighth addendum), inter-convention unwind boundary safety (Rule 0.58 eighty-ninth addendum), verification-claim property exactness (Rule 0.58 ninetieth addendum), and gated-activation runtime verdict recording (Rule 0.58 ninety-first addendum), plus the guard-and-refusal classes of catalogue items 66-74, Rules 84-93 (prior-art resolution, required-property validation, in-unit class sweep, operation-form enumeration, interposition contract preservation, layered interception, evidence-anchored enumerations, change-set completeness, repair observability, and claim hygiene), and the bullets above. Each must be confirmed absent or explicitly addressed, with the Rule 5 tool-parse condition applied.
 
 2. **Goal check (Rule 8):** Re-examine every change made during the current task against all four Rule 8 confirmations — not only the last change, and not only one of the four confirmations. Each change may be individually correct yet combine with another to produce a conflict that is only visible at the task level. This re-examination is the only pass that sees the aggregate. Confirm the change achieves its goal in the optimal, most correct, most secure, and most performant way. The four confirmations mandated by Rule 8 must be explicitly written out in this step's report; citing Rule 8 or claiming it was already checked without reproducing its required written statements is a protocol violation. Performance matters and must be evaluated explicitly, not assumed acceptable.
 
@@ -2309,7 +2347,7 @@ None of these four steps may be skipped or merged — each catches what the othe
    - Security (OWASP Top 10): injection, broken access control, insecure data handling, and any other relevant class.
    - Error handling: are all failure paths handled, and do callers receive the right behavior on failure?
    - Whether the code achieves what it appears to intend.
-   - Failure-class sweep (Rules 16-74): apply the full Rule 5.1 step 1 failure-class sweep — the named classes (back-edge, flag write-order, proof re-read, toolchain conflict, re-entrancy, unfinalized handles, guard-subject pairing, dispatch-continuation coverage, derived-representation drift, effect-class channel gap, patch-site resume boundary arithmetic, raw-memory scan candidate property validation, global last-event store freshness, foreign-binary effect-class channels, Rule 2A) and the Rules 16-74 sweep (including the Rule 29 failure-class catalogue and the verdict-level classes 30-74) — to every new or changed mechanism under review, declaring each category examined.
+   - Failure-class sweep (Rules 16-74): apply the full Rule 5.1 step 1 failure-class sweep — the named classes (back-edge, flag write-order, proof re-read, toolchain conflict, re-entrancy, unfinalized handles, guard-subject pairing, dispatch-continuation coverage, derived-representation drift, effect-class channel gap, patch-site resume boundary arithmetic, raw-memory scan candidate property validation, global last-event store freshness, foreign-binary effect-class channels, Rule 2A) and the Rules 16-74 sweep (including the Rule 29 failure-class catalogue and the verdict-level classes 30-74), plus the guard-and-refusal-class sweep (refusal-path output, guard dominance and placement, region-membership and overflow-safe containment, predicate purity, composite-check reason coverage and claim honesty, mechanism-class sweep, callee internal-access precondition, and own-guard audit) — to every new or changed mechanism under review, declaring each category examined.
    Declare each category as examined in the response - state findings or explicitly state "nothing found" for each one individually - before moving to step 3. A category not declared examined is a category not checked.
 
 3. **Widen to integration points.** Before reading any caller, callee, or shared-state accessor: run grep or symbol search to produce an explicit list of every integration point. Do not begin reading until the list is complete — widening only to items already known produces a list limited to what stood out, not all integration points. Read every item. A finding in an adjacent function is still a finding — integration bugs exist between functions, not within them.
@@ -2526,6 +2564,22 @@ Before writing any new logic, function, or check, enumerate the surrounding-syst
 (gg) **Verification-claim property pairing.** For every verification claim the new logic's completion will make, the asserted property and the property the evidence tests, named and confirmed identical. (Rule 0.58 ninetieth addendum.)
 (hh) **Gated-activation runtime verdicts.** For every conditional activation the new logic introduces, the gate's runtime verdict that the completion report will record: matched, failed with its signal observed, or not exercised, with its observation evidence. (Rule 0.58 ninety-first addendum.)
 
+(ii) **Refusal and skip paths.** Every branch the new logic adds that ends an operation early, the artifact each leaves for its consumers, and what each consumer does with that artifact. (Rule 75; distinct from (c), which governs a check's own availability and its skip paths.)
+
+(jj) **Guard dominance.** For every guard the new logic adds, the first read or derivation of the guarded value on every path, including reads inside constructors, factories, wrappers, and callees. (Rule 76.)
+
+(kk) **Region membership and containment arithmetic.** For every region-reached value, the property the access requires, the live base and extent, the arithmetic form and operand compatibility, and the revalidation points after relocation or resize, each read from the code rather than assumed. (Rule 77.)
+
+(ll) **Predicate side effects.** For every predicate or precondition the new logic adds or newly reaches, its side effects, the frequency and context in which it runs, and where any corrective action is placed instead. (Rule 78.)
+
+(mm) **Signals and claims.** For every check the new logic adds, each failure reason and its signal; and for every claim the change makes, the path that enforces it and the domain that path covers. (Rule 79.)
+
+(nn) **Mechanism-class enumeration.** For every defect class the new logic fixes or guards, the primitive operation form and every expression variant of it across the workspace, with the search terms and per-site verdicts. (Rule 80.)
+
+(oo) **Callee internal-access preconditions.** For every callee the new logic calls that performs a computed access, the precondition that access requires and where it is established relative to the call. (Rule 81.)
+
+(pp) **Shared-bound form and drift.** For every bound, limit, or threshold the new logic adds or references, its name uniqueness within the domain, its usable form in every referencing context, and either every literal site that must be converted in the same change or the recorded residual and compensating control where no single form is usable in every context. (Rule 82.)
+
 A change is not ready to be written until every aspect above has been enumerated for it and either resolved or explicitly recorded as a gap. The enumeration and its resolution or gap record must be written out in the response — a consult that is claimed but not written is indistinguishable from one never performed. See also Rule 2A for the design-stage safeguards that complement this consult. The judgment that a change "seems isolated" and needs no consult is the failure mode this rule exists to prevent; the aspects invisible from the new code alone are exactly the ones that must be enumerated first.
 
 *Failure class: new logic is written and reviewed in isolation; every aspect of the surrounding system that the logic touches is unexamined, so the defects that depend on writers, orderings, legitimate states, observables, artifacts, names, siblings, plans, runtime behavior, metadata, or platform width survive — each locally invisible and each requiring a different file or baseline to find.*
@@ -2572,7 +2626,7 @@ For every security or integrity check, enumerate every path by which the check c
 
 ### Rule 19 addendum — Documented contract claims must be tested, not trusted
 
-When a mechanism's own documentation claims a fail-closed or build-failing property — a docstring, a comment, a spec line stating that a failure "fails the build", "aborts", "is fatal", or "cannot be silently skipped" — the review must test that claim against the implementation by reading the code that is supposed to enforce it, and must name each claim, the code that enforces it, and the verdict. A claim that the code does not enforce must be surfaced and either the code made to enforce it or the claim removed; a claim left in place over an unenforcing implementation is a false contract that future readers will trust. Rule 34 generalizes this obligation to every behavioral claim in the change. Removing the claim does not make the mechanism correct: the underlying failure path remains subject to Rule 19's skip-path audit and must still be classified rather than silently accepted.
+When a mechanism's own documentation claims a fail-closed or build-failing property — a docstring, a comment, a spec line stating that a failure "fails the build", "aborts", "is fatal", or "cannot be silently skipped" — the review must test that claim against the implementation by reading the code that is supposed to enforce it, and must name each claim, the code that enforces it, and the verdict. A claim that the code does not enforce must be surfaced and either the code made to enforce it or the claim removed; a claim left in place over an unenforcing implementation is a false contract that future readers will trust. Rule 34 generalizes this obligation to every behavioral claim in the change. Removing the claim does not make the mechanism correct: the underlying failure path remains subject to Rule 19's skip-path audit and must still be classified rather than silently accepted. Rule 79 item 3 applies the same coverage requirement to the enforcing path, which must cover the claim's stated domain rather than merely exist.
 
 **A documented fail-closed or build-failing claim must not be left standing over an implementation that does not enforce it, and must not be deleted to escape that audit. The review must name each claim, the code that enforces it, and the verdict.**
 
@@ -2658,7 +2712,7 @@ Any code that interprets structural metadata an untrusted party can influence �
 
 ### Rule 26 addendum — Indexed reads over validated bases
 
-When a walk reads indexed entries (base + index * stride) from a region whose base and overall bounds were validated, the index positions must be validated independently: a count field from the data drives the loop, and each derived position must be re-checked against the validated range before the read. Validating only the table bases leaves every indexed position unchecked, so a hostile count or ordinal walks past the end of the region. The bounds must be the actual region limits, and a hostile count must be capped before it is used in any derived access.
+When a walk reads indexed entries (base + index * stride) from a region whose base and overall bounds were validated, the index positions must be validated independently: a count field from the data drives the loop, and each derived position must be re-checked against the validated range before the read. Validating only the table bases leaves every indexed position unchecked, so a hostile count or ordinal walks past the end of the region. The bounds must be the actual region limits, and a hostile count must be capped before it is used in any derived access. The validity test a walk performs is governed by Rule 77: membership with the live base and extent, in arithmetic that cannot wrap, revalidated after relocation or resize.
 
 *Failure class: a metadata walk validates the base of each table but not the indexed positions; a hostile count or ordinal drives base + index * stride past the region end, and the stray reads feed the downstream computation.*
 
@@ -2750,7 +2804,17 @@ The classes below are a fixed catalogue of ways a mechanism can be wrong that ar
 64. Property-proxy verification claim: evidence that tests a weaker or adjacent property than the claim (identity evidence for location, field freshness for record freshness); the claim presented as verified while the asserted property was never tested. (Rule 0.58 ninetieth addendum; the claim-side counterpart of catalogue item 53)
 65. Assumed gate match: a conditionally activated mechanism reported complete on a clean build with no recorded runtime verdict of its gate; the report fills the unmeasured state with success. (Rule 0.58 ninety-first addendum; the completion-side counterpart of catalogue item 58)
 
-The catalogue is a minimum, not exhaustive — a mechanism must also be checked against any class its domain implies. A verdict of "not applicable" must be argued from the code, not asserted. This catalogue is additive to the failure-class sweep in Rule 5.1 step 1 and to the code-review trigger's category list; both must be swept.
+66. Refusal without a fallback: an operation is refused or skipped on a path where the consuming side uses an artifact unconditionally, leaving that artifact unchanged, indeterminate, or partially formed; the refusal reads as safe because it was reasoned about from inside the refusing function. (Rule 75)
+67. Non-dominant guard: a guard's failure branch still reads the validated value, or the guard sits after the first read, including reads performed inside a constructor, factory, or wrapper built from that value. (Rule 76; item 48 governs the location a guard reads, this item governs its placement relative to the reads of that value)
+68. Absence-only validity test: an address-, index-, handle-, or identifier-shaped value is validated against one disallowed value while every other invalid value passes; or the containment arithmetic can wrap, the extent is stale after a relocation or resize, or an externally supplied value is read before its membership is established. (Rule 77; item 13 governs the walk's own bounds and fault isolation, this item governs the validity predicate, its arithmetic, and the revalidation after relocation)
+69. Acting predicate: a predicate, guard, or precondition on a live path changes state, acquires or releases a resource, performs I/O, submits work, allocates observably, or re-enters the subsystem it inspects; the effect runs at the predicate's frequency in a context whose lifecycle was never designed for it. (Rule 78)
+70. Partial signal or unfounded claim: a check with several failure reasons reports only some of them, so the silent reason is taken for health; or a behavioural claim names an enforcing path whose domain does not cover what the claim asserts. (Rule 79; item 21 covers a claim with no enforcing path at all, this item adds the per-reason signal obligation and the domain-coverage requirement of the enforcing path)
+71. Wrapper-only sweep: a defect class is enumerated by the function, helper, or idiom through which it was first observed, leaving the same operation performed inline, in a sibling implementation of the same contract, behind generated or external code, or by a caller that assembles the operands itself. (Rule 80; item 40 covers the module-scope accessor and sibling-pattern sweep, this item covers the primitive-operation sweep across expression variants, generated and external paths, and callers that assemble the operands)
+72. Post-hoc validation of an internal access: a callee performs a computed access internally and the caller validates only the result afterwards; a wrapper's absence check or default return is accepted as the precondition the callee's access actually required. (Rule 81; item 68 governs the validity predicate and its arithmetic, this item governs validation that arrives after the access it was meant to protect)
+73. Shared-bound drift: a shared bound is named after a term two domains share, is written in a form unusable in some contexts that must reference it so sites fall back to literals, or is duplicated as a literal because the constant was not available where it was needed. (Rule 82; item 7 governs duplicated constants that must agree across artifacts and item 10 the near-colliding name, this item governs the bound's name, its usable form, and the literals that replace it where it cannot be referenced)
+74. Unaudited own guard: the change adds guards, refusals, predicates, bounds tests, or fallbacks and never audits them as the subject of the change; the verification pass treats their presence as protection, so the classes of Rules 75-82 survive inside the code added to be safe. (Rule 83)
+
+The catalogue is a minimum, not exhaustive — a mechanism must also be checked against any class its domain implies. A verdict of "not applicable" must be argued from the code, not asserted. This catalogue is additive to the failure-class sweep in Rule 5.1 step 1 and to the code-review trigger's category list; both must be swept. Rules 84-93 are additive as well and are checked in the same pass.
 
 *Failure class: the review sweeps only the failure classes that first come to mind, so the classes that require a baseline — the committed code, the codebase's own model of legitimate behavior, the established comparison form — are missed until a later targeted search finds them one at a time, each turn discovering a single class.*
 
@@ -2812,7 +2876,7 @@ The mandatory check for any control that selects an action or a verdict:
 
 Any comment, design note, or documented claim about the behavior of code written or modified in the same change — that a path bypasses a platform mechanism, that a check cannot be skipped, that a value never occurs, that a call fails closed — must be tested against the code by reading the path claimed to provide it. A claim the code does not enforce is a false contract: it misleads every future reader of the mechanism and provides a false basis for the next change. This applies to all behavioral claims, not only to the fail-closed and build-failing claims already covered by the Rule 19 addendum.
 
-Before completion, list every behavioral claim made in the change's comments, design notes, and delivery report, name the code path that is supposed to provide it, and read that path. A claim with no enforcing path must be enforced or removed; a claim left over an unenforcing implementation is a defect regardless of how plausible the claim reads.
+Before completion, list every behavioral claim made in the change's comments, design notes, and delivery report, name the code path that is supposed to provide it, and read that path. A claim with no enforcing path must be enforced or removed; a claim left over an unenforcing implementation is a defect regardless of how plausible the claim reads. Rule 79 item 3 adds coverage: the enforcing path must cover every caller, branch, and state the claim asserts, not merely exist.
 
 *Failure class: a mechanism is documented as doing something it does not do — bypassing a platform layer, activating, failing closed — and the documentation is trusted, so the next change builds on a false premise and the false behavior ships. The claim and the implementation are never read against each other.*
 
@@ -3367,7 +3431,7 @@ The mandatory behavior:
 3. Distinguish an audited site from a cited one in the response; a citation without a read and a verdict is not coverage.
 4. Re-run the search in the completion gate; the report must name the search terms and the verdict per remaining site.
 
-This rule is the module-scope counterpart of Rule 3 addendum (which sweeps the changeset for locations where an established defensive principle applies), Rule 23 (which enumerates the sibling paths a new state write or check must mirror), and Rule 67 (which enumerates every site that can invoke a guarded operation). Those sweep from the principle, the pattern, or the invocation; this rule sweeps the two sets the others do not reach — every other use of the same fallible accessor in the containing module and every sibling function of the same boundary pattern outside the touched scope. Satisfying any of those does not satisfy this rule.
+This rule is the module-scope counterpart of Rule 3 addendum (which sweeps the changeset for locations where an established defensive principle applies), Rule 23 (which enumerates the sibling paths a new state write or check must mirror), and Rule 67 (which enumerates every site that can invoke a guarded operation). Those sweep from the principle, the pattern, or the invocation; this rule sweeps the two sets the others do not reach — every other use of the same fallible accessor in the containing module and every sibling function of the same boundary pattern outside the touched scope. Satisfying any of those does not satisfy this rule. Rule 80 generalizes this sweep: the module-scope sets enumerated here are a subset of the expression variants of the primitive operation that Rule 80 requires, and a sweep that stops at the accessor and the sibling pattern is a partial sweep of the class.
 
 *Failure class: the agent fixes the reported site, cites a neighboring file as evidence the pattern is already guarded, and stops — while other derefs of the same accessor and sibling functions of the same boundary pattern remain unexamined and crash on the next hostile input.*
 
@@ -3386,6 +3450,389 @@ The mandatory behavior:
 This rule governs the ordering of the sequence; Rule 21 addendum governs the compared form, lengths, and failure semantics of a paired operation. A pair can agree on lengths and failure verdicts and still be broken by a swapped ordinal, which is the divergence this rule alone detects. Satisfying one does not satisfy the other.
 
 *Failure class: each side of a boundary assumes a different order for the same positional sequence; both compile and each is internally consistent, and the divergence surfaces only as silently swapped or offset data at runtime.*
+
+---
+
+**Numbering note.** Rules 75 to 93 are top-level rules. They are distinct from the Rule 0.58 addenda that share their ordinals; those govern unrelated subjects, and a citation of a Rule 0.58 addendum always names it as an addendum.
+
+## Rule 75 — A Refusal Must Satisfy the Consuming Side's Contract
+
+A change that adds a refusal, a guard, an early return, or a declined operation changes what the caller receives. Refusing is not automatically the safe option: a skipped operation leaves whatever the caller consumes - a returned value, an output parameter, a mutated receiver, a published state, a side effect the caller depends on - in the state that existed before the call or in a partially written state, and the caller may require that artifact unconditionally.
+
+The mandatory behavior:
+1. Enumerate every branch the change adds that ends the operation early: refusals, guards, bails, loop exits and other early loop terminations, fallbacks, deferrals, skips, and exception or fault paths. A branch that ends only part of the operation - one entry of a loop, one item of a batch, one stage of a sequence - carries the same obligation for the artifact that part was responsible for.
+2. For each such branch, name the artifact the consumer uses after the call and read the consumer - including, where the call is indirect, the dispatch, registration, interception, or replacement mechanism that consumes the result - to establish what it does when that artifact is absent, unchanged, or partial.
+3. If the consumer uses the artifact unconditionally, the refusal branch must produce a valid artifact of the required kind, or the operation must be relocated so the consumer's requirement is met. Leaving the artifact indeterminate or partially formed is a defect even when the refusal itself is correct in isolation.
+4. A fallback produced on a refusal branch must be a value the consumer accepts, and must not collide with a meaningful value of the same domain (Rule 70).
+5. A refusal reported through a channel the consumer interprets differently from success must not be presented as a successful result. State which channel the consumer branches on and confirm the refusal is distinguishable there.
+6. Record, for every early-ending branch, the condition, the post-state the system is left in, the consumer's contract on that branch, and the signal emitted. A branch whose post-state is not recorded is an unverified branch.
+7. Review the branches as a set for asymmetry: where a success path initializes, registers, releases, commits, or publishes, every early-ending path must do the equivalent for the artifacts it touched, or state explicitly why the asymmetry is safe.
+8. Where the consumer set cannot be enumerated - because the interface is published, external, or consumed outside the repository - state that explicitly, treat the documented contract as the consumer, and record the enumeration gap and the compatibility statement the change relies on. An unenumerated consumer set is not an absence of consumers.
+
+**A refusal path is not complete until the consumer's contract on that path has been read and satisfied. Concluding a refusal is safe by reasoning about the refused operation alone is a protocol violation.**
+
+*Failure class: a guard is added to stop a bad operation, the caller then consumes the artifact the operation was supposed to produce, and the caller operates on a value that was never produced - while the guard's own code reads as correct and the caller's requirement is invisible from inside the guarded function.*
+
+---
+
+## Rule 76 — A Guard Must Dominate Every Read of the Value It Validates, and Precede the First Read
+
+A validation whose failure branch falls through to code that still uses the validated value protects nothing: it reports a problem and then proceeds into the code the problem concerns. The same defect exists when the validation is placed after the first read - including reads performed inside a function, constructor, factory, or wrapper that the consumer calls before any guard the consumer might add.
+
+The mandatory behavior:
+1. For every guard, name the value it validates and every statement that reads, derives, formats, forwards, or stores that value.
+2. Confirm the failure branch dominates all of them: no statement on the failure path reads the value, including diagnostic calls that format it, accessor calls that re-read it, and code after the guard in the same block. A validation that sanitizes instead of rejecting - clamping, substituting, or normalizing the value - must be shown to dominate the read equally, and the substituted value must satisfy the consuming side's contract (Rule 75).
+3. Determine the first read or derivation of the value in program order on every path that can reach the code under change, including inside the construction of any object built from it. The validation must execute before that point, or the code that reads it first must itself be made to validate.
+4. If the first read happens inside a callee the change does not control, place the validation above that callee, and establish that no other path reaches the callee with an unvalidated value (Rule 81).
+5. Where the value is validated and then used indirectly, record what the wrapper, view, proxy, or handle created from it reads at construction; constructing such an object from the value is a read, so its construction must also be guarded.
+6. Re-run the audit when the value gains a new reader, because a reader added later can move the first read above the guard.
+7. Where the change relies on a validation performed elsewhere - by a caller, a wrapper, a factory, a constructor, or an earlier stage - name that validation, its location, and the path by which it dominates this read. A validation that is unnamed, or that does not dominate this read on every path, does not satisfy this rule.
+
+**A validation whose failure branch still allows the read it detected is decorative. A guard placed after the first read is not a guard for that read.**
+
+Rule 0.58 seventy-fourth addendum governs what a guard reads relative to the location the hazard-producing path writes or clears; this rule governs where the guard sits relative to the reads of the value it validates. Rule 5 checklist item J covers the former and item W the latter; both are required, and satisfying one does not satisfy the other.
+
+*Failure class: the guard is written at the point where the failure was reported, the read it was meant to prevent has already happened - in a constructor, a wrapper, or an earlier branch - and the guard's own text reads as protection while the hazardous value has already been consumed.*
+
+---
+
+## Rule 77 — Region-Named Values Must Be Tested for Membership, with Containment Arithmetic That Cannot Wrap
+
+When a value names or is used to reach an element of a region - a reference, a handle, an index into a table or array, an offset into a buffer, an identifier resolved through a lookup - its validity is membership in that region, not the absence of one disallowed value. A null, zero, or empty test accepts every other invalid value, including the near-null values, stale values, and values that name storage outside the region, which are the ones actually reached.
+
+The mandatory behavior:
+1. State the property the value must have - belongs to the region, addresses an existing element, lies within the extent, satisfies the alignment the encoding requires - and test exactly that property.
+2. Read the region's boundaries from the canonical source at validation time: the current base and the current extent, not a compiled-in assumption and not a copy cached earlier. Where the region can be relocated, freed, resized, or reallocated, any membership established before that operation is void and must be re-established after it. The determination that a region cannot be relocated, resized, freed, or reallocated must be read from the code that establishes it, not assumed from the region's apparent role or lifetime; where it cannot be established by reading, revalidate before the access.
+3. Express containment so that it cannot wrap or overflow: validate each operand's sign and magnitude first, then use a form whose intermediate values cannot exceed the type's range - typically a difference measured against the extent rather than a sum of base and offset. State the arithmetic form used and why it cannot wrap, and name the concrete invalid value the weaker test would have accepted. Confirm that the operands' types, widths, and signedness are compatible with the comparison actually performed, and that no implicit conversion changes the meaning of the result.
+4. Values returned by an external function, or received from an external subsystem, that name or reach an element of a region are unvalidated until membership has been established; looking plausible is not validation. Validate before the first read or write of the named element, never after. The value's origin does not exempt it: a value produced by code the change controls is equally unvalidated until membership is established.
+5. Where the platform or subsystem documents a minimum plausible value for address-like or size-like quantities, apply it as the first check so that no field is read through a value below that floor.
+6. Do not conflate two regions of the same shape: a value valid for one table, allocation, or namespace is not valid for another, and a membership test written for one must not be reused for the other without re-deriving it (Rule 82 item 5).
+
+**A validity test that rejects one disallowed value while accepting every other invalid value is not a validity test.**
+
+Rule 26 and its addendum govern walks whose bounds and indices come from untrusted structural metadata, and the fault isolation that must surround them; this rule governs the property the validity test asserts, the form of the containment arithmetic, and the revalidation that follows relocation. Rule 3 second addendum governs matching the established comparison form for the same value class in the same region; it does not permit a test derived for one region to be reused for another (item 6).
+
+*Failure class: a value is checked against null or zero, passes, and then names an element of a region it does not belong to; the check was written for the value's shape rather than for the property the access requires, and the read outside the region happens before any later check the author believed was protecting it.*
+
+---
+
+## Rule 78 — Predicates and Preconditions Must Not Act
+
+A check that runs on a live path - a predicate, guard, precondition, validity test, or admission check executed per call, per iteration, per event, or per frame - must not change system state. Actions inside a predicate have consequences the predicate's author did not design: they run at the predicate's frequency, they can hold lifetimes open longer than intended, they can allocate or perform I/O on a path that was not sized for it, and they can re-enter the subsystem the predicate is inspecting while the caller is mid-operation.
+
+The mandatory behavior:
+1. List every side effect of the predicate: state mutation, resource lifecycle change (acquisition, release, reference counting, registration, deregistration, cancellation), I/O, work submission, allocation whose failure or timing is observable, logging that can allocate, and any call that can re-enter the subsystem the predicate inspects.
+2. A predicate may perform no side effect on a live path unless the effect is idempotent, bounded per operation, and provably cannot re-enter the inspected subsystem. A corrective action that is genuinely needed belongs where its lifecycle consequences are designed - at the caller, at a named recovery step, or at an initialization or teardown stage - with the predicate reporting only the verdict.
+3. Where the predicate must report, bound the report: a fixed or rate-limited signal, no unbounded emission per call, and no allocation on a path whose failure is not recoverable at that point.
+4. If the predicate's own work is expensive, confirm the cost is acceptable at the frequency at which the predicate runs, and state that frequency.
+5. Re-run this audit for every new caller the predicate gains, because frequency and context change the consequences of the same side effect.
+6. State where the predicate runs: every path that reaches it and how often each one does. A predicate audited at one call site is unverified for its other callers (item 5), and a predicate whose frequency is unstated cannot be assessed against item 4.
+
+**A predicate that acts is not a predicate: it is a state change located where its consequences were never designed.**
+
+Rule 37 governs cleanup that re-enters the mechanism it is handling; Rule 65 governs a guard's action on its own guaranteed re-entry; Rule 5 checklist item B governs re-entrant call paths into error and logging entry points; Rule 67 governs exhaustion of the sites that can invoke a guarded operation. This rule governs every side effect a predicate, guard, or precondition performs on a live path, and where a corrective action must live instead.
+
+*Failure class: a validity test placed on a hot path acquires, releases, registers, cancels, or allocates as a side effect of being evaluated; the effect runs thousands of times per second, outlives the scope the author assumed, or re-enters the subsystem under inspection while it is mid-operation.*
+
+---
+
+## Rule 79 — Composite Checks Must Signal Every Reason, and Every Claim Must Match the Code
+
+A check with more than one failure reason whose signal is emitted for only some of them tells the reader the check is healthy while the dominant reason is silent. The same dishonesty appears in prose: a statement that a property holds - every refusal is reported, the value cannot be invalid, the operation falls back to a safe default - is valid only when the enforcing path was read and covers the stated domain.
+
+The mandatory behavior:
+1. Enumerate the distinct reasons the check can fail, and for each reason state the observable signal emitted and where it can be observed. A reason with no signal must be justified in writing with its compensating control, or given one.
+2. Do not emit a signal in a form a reader would take as covering the whole check when it covers one reason; name the reason in the signal.
+3. For every behavioural claim the change makes - in comments, in the change description, or in the completion report - name the code path that enforces it and confirm the path covers the claim's stated domain: all callers, all branches, all states. Where the enforcing path covers less than the claim asserts, narrow the claim to the domain that was verified and record the narrowing (Rule 0.58 ninetieth addendum); a narrowed claim must not be used to support the broader assertion elsewhere in the same report.
+4. Label claims about ordering, environment, or runtime state that were inferred rather than observed as inferred, or omit them. A statement contradicted by the control flow in the same region is a defect of the change, not a cosmetic issue.
+5. Where a claim quantifies (every, always, never, cannot), check the enforcement against the quantified domain, including the branches the author did not have in mind.
+
+**Evidence required: the per-reason signal list, and for every claim the enforcing path named by code location.**
+
+Rule 34 governs whether a behavioural claim is enforced at all, and Rule 19 addendum governs claims of a fail-closed or build-failing property; this rule adds the coverage of the claim's stated domain (item 3) and the reason-by-reason signal obligation (item 1). Rule 2A.9 governs the failure modes across the stages of a mechanism; item 1 governs the reasons a single check can fail. Rule 5 checklist item T and Rule 0.58 ninetieth addendum govern the exactness of the property a verification claim asserts.
+
+*Failure class: the check reports the reason that is easy to report, the reason that fires in practice stays silent, and the reader trusts the signal; or a comment asserts a guarantee that the adjacent control flow does not provide, and the next reader builds on the assertion rather than on the code.*
+
+---
+
+## Rule 80 — Sweep by Mechanism, Not by the Wrapper the Defect Was First Seen Through
+
+When a defect class is hunted, or protection against it is propagated, the enumeration must cover every site that performs the operation. Enumerating the sites that call a particular function, wrapper, helper, or idiom finds only the sites written through it: a later stage that reaches the same operation directly, a sibling implementation of the same contract, an inline form of the same calculation, and a caller that assembles the inputs itself all keep the defect while a wrapper-name search reports the sweep complete.
+
+The mandatory behavior:
+1. State the operation in primitive terms, independent of any function, type, or library name - for example, "derives an element position from an unchecked index", "reads a field through a value that was never validated", "consumes an artifact the producer may not have produced", "tests one disallowed value where membership is required". Write the primitive statement before choosing search terms; terms drawn from the wrapper's name do not satisfy item 1 or item 3.
+2. Enumerate every expression variant that performs that operation: through the established wrapper, inline in the same module, in sibling implementations of the same contract, behind generated or external code, and in callers that construct the operands themselves.
+3. Search with terms derived from the primitive form - the arithmetic, the index, the field, the division, the substring - not only from the wrapper's name, and record the search terms in the report.
+4. Record a verdict with read evidence for every site found, plus an explicit statement of what remained unfound per expression variant. A verdict that cites a site without reading it is a citation, not coverage (Rule 73).
+5. Repeat the sweep whenever the change introduces a new expression variant of the operation, and whenever the operation gains a new caller.
+
+**A sweep is complete only when a search for the primitive operation form returns nothing further. A search for the idiom through which the class was first observed is a starting point, never the enumeration.**
+
+Rule 73 governs the module-scope sweep of every other use of the same fallible accessor and of sibling functions of the same boundary pattern, and treats a citation as coverage only when the site was read. This rule generalizes that sweep to the primitive operation form and its expression variants, so this rule is the outer enumeration and Rule 73 the inner one. Rule 23 governs the sibling paths a new state write or check must mirror; Rule 67 governs every site that can invoke a guarded operation; Rule 0.58 twenty-ninth addendum governs sweeping a modernization or correction across every unit; Rule 0.58 seventy-seventh addendum governs every mechanism that can produce a guarded effect. Satisfying any of those does not satisfy this rule.
+
+*Failure class: the fix is applied at every call site of the helper that exhibited the defect, and the same operation performed inline elsewhere - or by a caller that builds the operands itself - keeps the defect while the report describes the class as closed.*
+
+---
+
+## Rule 81 — Establish a Callee's Internal-Access Preconditions Before the Call
+
+Many callees perform computed access internally without validating their inputs: they select elements by index, derive positions or offsets, compute lengths, stride through a region, or index a table by an identifier. A change that calls such a callee and validates the result afterwards has not protected the access: the callee already performed it, and a value can be read outside the intended region before any check the caller makes can run.
+
+The mandatory behavior:
+1. For every callee the change calls, determine by reading the callee or its authoritative specification whether it performs a computed access whose correctness depends on its inputs. Do not infer this from the call site, from the callee's name, or from the fact that it is widely used.
+2. For each such input, establish the precondition the internal access requires - membership, a range relative to the same base and extent the callee uses, a non-degenerate length, a non-zero divisor, a valid stride, an initialized state, a held lock, or a required mode - and establish it before the call.
+3. Treat wrapper, relay, and adapter functions as suspects: a wrapper that performs an absence check on a returned value, or that returns a default on failure, is not a precondition for an access the callee already performed.
+4. Where the precondition cannot be established at the call site, the call must not be made, or must be replaced by an operation whose preconditions can be established. Validating after the call cannot substitute.
+5. Where the change introduces a fallback value, confirm the fallback is not itself passed into a callee whose preconditions it violates.
+6. Where the callee validates the input internally, name that validation and its position relative to the access on every path into the access; a validation that runs after the access, or only on some of the paths, does not establish the precondition. The callee's widespread use, age, or apparent stability is not evidence about its preconditions; only reading it is.
+
+**Evidence required: the callee's internal access, the input it depends on, the precondition check and its position relative to the call, and the concrete input that would otherwise reach the access unvalidated.**
+
+Rule 76 governs the placement of a validation relative to the reads of the value it validates; Rule 77 governs the property such a validation must assert; this rule governs access performed inside a callee, which no validation performed after the call can establish. Rule 2 governs reading a callee's signature, return semantics, and error behavior before calling it; this rule adds the computed access the callee performs internally and the input that access depends on.
+
+*Failure class: a caller wraps a call in a result check and believes the access is safe; the access happened inside the callee, so the check protects nothing, and no amount of validation afterwards can undo a read that already occurred.*
+
+---
+
+## Rule 82 — Shared Bounds: Domain-Specific Names, a Universally Usable Form, and One Source
+
+A shared bound, limit, stride, or threshold is a contract many sites depend on. Three defect shapes recur: a constant named for a term that two different domains in the same codebase share, so it is applied to the wrong table; a constant written in a form unusable in some of the contexts that must reference it, so those sites fall back to literals; and a literal that duplicates the constant because the constant was not available where it was needed.
+
+The mandatory behavior:
+1. Name every shared constant for the specific domain it bounds, uniquely within the codebase. Where two domains are both naturally described with the same words, both names must carry the distinguishing qualifier.
+2. Choose the form that is usable in every context where it is referenced - including contexts that accept only a constant value or a restricted set of expressions - and that requires no separate definition, external linkage, or initialization-order dependency in order to be usable. Where several forms qualify, choose the one with the fewest such dependencies and state that choice.
+3. Convert every site that used a literal for the same bound to reference the constant in the same change, and list the converted sites.
+4. Where a value is derived from a constant - a count minus one, a last index, an extent in another unit - name the derivation at the site rather than writing a second literal.
+5. Where two different regions or tables are indexed by values of the same underlying type, their bounds and validity tests must be distinct and named after their domain; reusing one for the other is a defect even when the numeric bounds currently coincide (Rule 77 item 6).
+6. Where no single form is usable in every referencing context, state that explicitly, name the contexts that cannot reference the constant, and record the resulting duplication as an open residual with its compensating control (Rule 15). Silence about an unreferenceable context is the defect item 3 exists to prevent.
+
+**Evidence required: the constant's declaration form, every reference site, and the context classes in which it is used.**
+
+Rule 0.58 thirty-sixth addendum prohibits duplicate literals across declarations and boundaries, and Rule 0.58 forty-fourth addendum requires the physical dependency that keeps a declaration bound to the authoritative source; Rule 21 governs consistency across artifacts, and Rule 22 governs near-colliding names. This rule adds the form the constant must take to be usable in every context that references it, the domain-qualified naming that keeps two same-worded domains apart, and the requirement that literal sites be converted in the same change. Rule 77 item 6 governs distinct bounds for distinct regions.
+
+*Failure class: a shared bound is named after a concept two domains share, so it is applied to the wrong table; or it is declared in a form some contexts cannot use, so literals reappear at exactly the sites that were meant to reference it, and the constant no longer describes the codebase.*
+
+---
+
+## Rule 83 — Audit the Change's Own Guards as the Subject, Before Claiming Completion
+
+Rules 75 to 82 describe the failure modes of guards, refusals, predicates, bounds, and the sweeps that must cover them. This rule makes them the subject of the change's own verification rather than an incidental benefit of having written them. A verification pass that reads the change and concludes "the guard protects this access" without answering the questions below has verified the guard's intent, not its effect.
+
+Before the task is marked complete, every guard, refusal, predicate, bounds test, and fallback the change adds must have all nine answers written, each naming the code element it refers to and the read that establishes the answer. An answer that quotes this rule instead of naming the code element does not satisfy the requirement.
+1. What does it protect, in primitive terms - which operation, which value, which region?
+2. Is the consuming side's contract satisfied on its refusal path (Rule 75)?
+3. Does its failure branch dominate every read of that value, including reads performed inside constructors, factories, wrappers, and callees (Rule 76)?
+4. Is the property it tests the property the protected access requires, and is the arithmetic overflow-safe and operand-compatible (Rule 77)?
+5. Is it free of side effects on the path and at the frequency at which it runs, at every call site that reaches it (Rule 78)?
+6. Does it signal every reason it can fail, and does every claim made about it name an enforcing path that covers the claimed domain (Rule 79)?
+7. Was the operation swept by mechanism across the codebase, or only where it was first observed (Rule 80)?
+8. Does the protected call require a precondition that is established before the call (Rule 81)?
+9. Is every bound it references named for its domain, declared in the form the referencing contexts require, and free of duplicating literals (Rule 82)?
+
+**A guard whose nine answers are not written is unverified, regardless of how cleanly the change compiles or how the guard reads.** A guard the change removes, widens, or relocates is audited by the same questions, with its former protection accounted for (Rule 0.9 second addendum and Rule 2A.1).
+
+*Failure class: guards are written and then trusted. The verification pass takes their presence as protection, so the classes of Rules 75 to 82 survive inside the very code the change added to be safe - and the report describes the change as hardened because it contains guards.*
+
+---
+
+## Rule 84 — Resolve Prior Art Before Introducing Any Named Artifact
+
+Before a change introduces any named artifact — a constant, literal value, address, limit, predicate, validator, helper, or naming convention — the codebase must be searched for an existing definition of the same subject, across every layer it could live in: the edited unit, its module, shared headers, and established utility locations. A new artifact authored first and reconciled afterward has already forked the codebase's own contract.
+
+The mandatory behavior:
+1. Search by meaning and by identifier, including plausible spellings, synonyms, and historical aliases, across every reachable unit — not only the module being edited.
+2. If a canonical artifact exists, use it. A local re-declaration is permitted only when the canonical artifact is unreachable for a stated reason that is verified by reading the dependency direction (a layer or module boundary, header isolation, or a lifecycle constraint prevents referencing it); the local form must then be a semantic mirror — identical domain, identical bounds behavior, identical failure behavior — carrying an in-code note that names the canonical artifact and the reason it could not be referenced. A local copy with different semantics is a fork, not a mirror.
+3. If a prior local mirror already exists, do not create a second one; reuse it or reconcile both onto a single form in the same change.
+4. When an existing predicate, validator, or test covers the same subject, the new form must match or strengthen it, never weaken it. An intentional difference in strictness is a correction and must be presented as one in the completion report, with the reason the existing form is insufficient — never introduced silently.
+5. The completion report names the search performed and the canonical artifact found, or states explicitly that no prior definition exists.
+6. No exemption via task size, the artifact appearing trivial, or an existing form predating the change: a one-line declaration is subject to this rule exactly as a new module is.
+
+**A named artifact must not be declared until the prior-art search is complete and its result stated. Declaring first and reconciling afterward is a protocol violation.**
+
+This rule is the artifact-level counterpart of Rule 3 (enumerate existing pattern instances before adding one), Rule 22 (search the existing namespace before introducing a symbol), Rule 40 (compare against the codebase's own implementation), Rule 82 (one source per bound), and Rule 0.58 thirty-sixth and forty-fourth addenda (single-source constants). Those cover patterns, names, implementations, bounds, and duplicated constants; this rule covers every named artifact, including values, addresses, predicates, and helpers. Satisfying any of those does not satisfy this rule.
+
+*Failure class: a constant, address, or predicate is re-invented beside the canonical one; the copies drift, validations diverge in strictness, and the codebase now enforces two different contracts for one subject.*
+
+---
+
+## Rule 85 — Validate the Property the Access Requires, with Wrap-Safe Arithmetic, on Every Path
+
+Every value that gates an access — a read, write, index, call, or transition — must be validated for the exact property that access requires, not for an adjacent proxy. Non-null is not membership; above-a-floor is not in-range; not-one-disallowed-value is not containment; non-zero is not valid.
+
+The mandatory behavior:
+1. State the property each gated value must have in the terms of the access itself — membership in the owning collection with live base and extent, alignment, index range, offset sign and magnitude, initialization, lifecycle phase — and validate that property directly.
+2. Compute containment with wrap-safe arithmetic against live bounds: validate operand magnitudes before combining them, and use forms whose intermediate values cannot overflow or wrap for any input the value's type admits. A bound derived from data is independently capped before it can bound a scan or an addition.
+3. Every element access on every path is preceded by an in-range determination — including the first access, including accesses inside loops, and including accesses believed correct from context. Context is not a range check.
+4. Any value re-acquired, re-fetched, re-derived, or re-selected after its validation is unvalidated again: revalidate before the next use on every path — success, retry, fallback, and recovery alike. A fallback that re-acquires state re-enters the entire hazard and receives the entire validation.
+5. Where validity cannot be established by any check available at the point of use, the access is restructured so that it can be, or refused under Rule 75.
+6. No exemption via the value's origin, the guard's apparent strength, or prior use of the same code: a value produced by the codebase's own machinery is equally unvalidated, and a guard that does not assert the required property is a finding even when it has never failed.
+
+**A gated access must not be written until the property its guard asserts is stated and matched to the property the access requires. Validating a proxy property, or skipping validation of a re-acquired value, is a protocol violation.**
+
+This rule generalizes Rule 77 (membership tests with non-wrapping arithmetic) from region-named values to every gated value, and completes Rule 81 (callee-internal preconditions) by requiring the precondition to survive re-acquisition. Rule 26 and its addendum govern metadata-driven walks; this rule governs the validation of every gated value, including values the change did not introduce but newly reaches. Satisfying any of those does not satisfy this rule.
+
+*Failure class: the guard tests a proxy property and passes values the access cannot survive; a fallback re-fetches the same broken state unvalidated; wrap-around in containment arithmetic admits values from outside the region.*
+
+---
+
+## Rule 86 — Sweep the Same Failure Class Inside the Edited Unit Before Completing the Edit
+
+A failure class lives in the unit being edited as much as in the line that exhibited it. When a fix or a new guard lands, every instance of the same class inside the function, file, and immediate structure being edited — including pre-existing code the change sits beside — is in scope for the same change.
+
+The mandatory behavior:
+1. Enumerate the class's expressions inside the edited unit: every sibling access of the same shape, every reselection, reset, or resubmission path, every re-fetch that follows a fallback or substitution, every arithmetic of the same form, and every message emitted about the condition being fixed.
+2. As a minimum actionable set, record a per-site verdict covering: whether first accesses are range-determined before reading; whether reselection, reset, and resubmission paths that re-acquire state revalidate it (validation duty: Rule 85 item 4); whether arithmetic of the same shape, including comparison, distance, and bounds expressions, is safe across the full domain including extremes and negatives (overflow-safety duty: Rule 85 item 2); and whether message sites about the condition are truthful and per-state signalled (duty: Rule 92).
+3. Record a per-site verdict — fixed, already safe, or explicitly out of scope with the reason. Silence about a site in the edited unit is an omission, not an exemption.
+4. Where the class cannot be closed in the edited unit without exceeding the change's purpose, the open sites are findings named in the completion report, each with the concrete constraint that blocks the fix and a compensating control whose implementation is read and verified (Rule 15). A finding recorded but not surfaced is an open defect.
+5. No exemption via the unit being small, the change being a one-line edit, or the sibling site being pre-existing: the sweep covers what the change sits beside as much as what it writes.
+
+**An edit must not be marked complete until the same class has been swept inside the edited unit and every site carries a verdict. Completing the edit with an unswept sibling site in the unit is a protocol violation.**
+
+This rule is the in-unit counterpart of Rule 3 addendum (sweep the changeset for every location where an established principle applies), Rule 73 (module-wide sweep of the same accessor and sibling patterns), and Rule 80 (sweep by mechanism). Those extend past the edited unit; this rule closes the unit itself before the change leaves the author's hands. Satisfying any of those does not satisfy this rule.
+
+*Failure class: the touched line is hardened while the identical hole a few statements away ships in the same change; the unit's reselection path re-imports the broken state the fix just removed.*
+
+---
+
+## Rule 87 — Enumerate Operations by Form, and Verify Coverage Against the Artifact
+
+An operation does not exist only where it is called. The same computation can appear as a direct call, an indirect call, a call through a callback or override, an inlined copy produced inside another routine, a macro or template expansion, a generated body, or a hand-duplicated block in a distant unit.
+
+The mandatory behavior:
+1. Define the operation in primitive terms — what it computes or accesses — and enumerate its occurrences by content in every form it can take, not only through the names by which it was first observed.
+2. Treat symbol-level search as a starting point only. For every load-bearing claim (failure impact, lifetime, security, cross-boundary identity), verify completeness with a content-level scan across every affected unit; where the deliverable is compiled or bundled, the built artifact is the authoritative enumeration surface — a copy the toolchain created is still a consumer.
+3. State the forms searched and the per-form result: direct and indirect calls, inlined or duplicated bodies, generated code, and independently implemented equivalents of the same operation. "All consumers" without a member list and this form statement is void.
+4. Re-run the form enumeration after the change whenever the change inserts, replaces, or intercepts the operation or its callers, because interception changes which forms remain reachable (Rule 89 governs the per-layer reachability re-derivation for the same reason).
+5. When part of the enumeration surface cannot be searched, all available search means must have been attempted before that conclusion; the gap is then stated, the coverage claim is narrowed to what was actually searched, and the report names what would close the gap (the artifact, tool, or runtime exercise required).
+6. No exemption via the operation appearing peripheral, the search returning many hits, or the change being an edit rather than an addition: the enumeration is owed for every coverage claim the change makes or relies on.
+
+**A coverage claim must not be made from a symbol-level search alone. Stating "all consumers" without a form-level enumeration and its per-form result is a protocol violation.**
+
+This rule fixes the execution standard of Rule 80 (sweep by mechanism, not by wrapper): the mechanism must be enumerated in all of its source, generated, and compiled forms and verified against the artifact. Rule 29's catalogue and Rule 5.1's sweep consume this enumeration. A sweep that cites Rule 80 without the per-form results this rule requires is still a symbol-level search. Satisfying any of those does not satisfy this rule.
+
+*Failure class: the symbol search finds the calls, the toolchain's duplicated copy of the same operation stays live with the defect, and the report claims the class is closed because the search returned what it was asked for.*
+
+---
+
+## Rule 88 — Interposition Must Preserve Every Consumer's Contract, Per Consumer
+
+When a change interposes on an existing operation — replacing, wrapping, intercepting, or substituting what other code receives — every consumer of the interposed result becomes a contract to satisfy. The interposition is correct only when each reachable consumer's contract is preserved.
+
+The mandatory behavior:
+1. Before writing the interposition, classify every consumer of the affected result: read-only or mutating; absence-tolerant or unconditional; identity-sensitive or value-only; side-effect-observing or result-only; and, where the operation can fail, dependent on how it signals failure. The classification is produced by reading the consumers — including, for indirect calls, the dispatch, registration, or interception mechanism that hands them the result — not from recall.
+2. The interposed behavior must satisfy the strongest contract found across all reachable consumers. Serving a mutating consumer a substitute, absence to a consumer that dereferences unconditionally, or a value-only guarantee where identity is observed is a defect per consumer, not an aggregate risk.
+3. Where consumers require incompatible semantics, differentiate them explicitly — distinguishing the call path and preserving the original result for the sensitive consumer while repairing for the others — rather than choosing one behavior and accepting a deviation for the rest.
+4. A deviation justified by "the current data makes it harmless" is prohibited. Differences from the original operation's behavior are defects to eliminate; if elimination is impossible within the task, the deviation is surfaced in the completion report as a contract change and requires explicit approval before it ships (Rule 15). Documenting a deviation is not fixing it.
+5. For healthy inputs, the interposition reproduces the original operation's semantics exactly. Every residual difference is enumerable per consumer and is enumerated.
+6. Where the original result can be absent and any reachable consumer dereferences it unconditionally, the interposition must not return absence to that consumer: it either produces a valid substitute satisfying that consumer's contract or declines the interposition for that path.
+7. No exemption via the consumers being few, internal, or believed tolerant: tolerance is established for each consumer by reading it, never inferred from the consumer count or its distance from the change.
+
+**An interposition must not be marked complete until every reachable consumer's contract is classified and satisfied, or explicitly approved as a changed contract. Shipping a per-consumer deviation justified only by current data is a protocol violation.**
+
+This rule applies the refusal-contract discipline of Rule 75 to interposition and extends Rule 0.9's design-change analysis to the consumer set of a replaced operation. Rule 70 governs fallback payloads; Rule 21 addendum governs paired operations; this rule governs the per-consumer contracts of an intercepted replacement. Satisfying any of those does not satisfy this rule.
+
+*Failure class: a repair hands a mutating consumer a substitute and its writes land on the wrong object; a caller that dereferences unconditionally receives absence from the repair path; an observable deviation ships because it was written into a report instead of being removed.*
+
+---
+
+## Rule 89 — Compose Interpositions by Layer and Re-Derive Reachability
+
+When a change interposes at more than one layer of the same operation chain — an outer convenience routine and the primitive it calls, a wrapper and the wrapped, a dispatcher and its handlers — the layers interact.
+
+The mandatory behavior:
+1. Enumerate the chain and the interposed layers before writing; state which layer each consumer reaches and which layer performs each semantic repair.
+2. Guarantee exactly one layer performs each repair. Two layers performing the same substitution or normalization is a defect: the second consumes the first's output and compounds it.
+3. Re-derive per-layer reachability after the interposition: which original bodies become unreachable, which paths no longer reach the inner interception, and which are handled twice. Coverage claims are restated against the post-change graph; counting a now-dead site as protected is an overclaim.
+4. Consumers that bypass the outer layer entirely — direct callers of the inner operation, other entry points, generated or foreign code — are not covered by the outer interception and are enumerated separately (Rule 87).
+5. The completion report states the layer diagram: layer, interception, repair owner, and which consumers remain reachable through each layer.
+6. No exemption via the interposed layers residing in different files, modules, or ownership boundaries: the layer diagram covers every layer the operation chain crosses.
+
+**A multi-layer interposition must not be declared covered until per-layer reachability is re-derived and every repair has exactly one owner. Counting pre-change reachability after interposition is a protocol violation.**
+
+This rule extends Rule 67 (guarded-invocation exhaustion) and Rule 88 to stacked interposition; Rules 80 and 87 supply the enumeration. Satisfying any of those does not satisfy this rule: it governs the interaction between layers, which no single-layer analysis sees.
+
+*Failure class: the outer replacement makes an inner site dead while the analysis still counts it as protected; two layers both normalize the same value and the second corrupts the first's repair.*
+
+---
+
+## Rule 90 — Enumerations, Counts, and Labels Must Be Emitted as Anchor Tables
+
+Every claim about a set — "all consumers", "the N sites", "every caller" — must be emitted as a table in which each member carries a unique, machine-verifiable anchor (a symbol name plus its location or immutable site identifier). Aggregate counts without member lists are void.
+
+The mandatory behavior:
+1. For every set referenced in analysis, a report, or a comment: list the members with their anchors, state the property that defines membership, and name the query that produced the set. The member list and its defining property travel together.
+2. When two sets share cardinality, similar names, or adjacent roles, disambiguate by content before any statement referencing "the" set: under each set's own defining property, list its members, and never let equal size stand in for identity.
+3. Labels in claims must be verified names. An approximate descriptor standing in for an unverified name is prohibited in claims and reports; where the name cannot be verified, state the anchor without inventing a label.
+4. Any impact or coverage statement is per member: the verdict attaches to each anchored member; an aggregate verdict without per-member verdicts is void.
+5. When a later pass finds an anchor wrong, missing, or superseded, every claim derived from that set is invalidated and re-derived, not silently patched (Rule 0.57).
+6. No exemption via the set being small, familiar, or referenced only in passing: a set of two members receives the same treatment as a set of thousands.
+
+**No set, count, or coverage claim may be stated without its anchor table and defining property. Letting equal cardinality stand in for set identity is a protocol violation.**
+
+This rule operationalizes Rule 0.59's fresh-read duty and its addendum's written-artifact requirement for enumerations, and extends Rule 79's coverage requirement to set identity. Rule 30 governs constant verdicts; this rule governs constant or inherited sets. Satisfying any of those does not satisfy this rule.
+
+*Failure class: the report names one set's count while listing another set's members; the sets shared a size, the claim reads as evidence, and a protected path goes unprotected because the wrong set was described.*
+
+---
+
+## Rule 91 — The Change Set Is Every Changed Artifact, Including Generated and Built Outputs
+
+A change set is not the set of edited source files. It is every artifact the state of the tree reports as modified, added, or regenerated — source, configuration, generated code, and compiled or packaged outputs — together with the relationship between them: what was built from what, in which order, and whether the outputs are newer or older than the inputs they must represent.
+
+The mandatory behavior:
+1. On any instruction to inspect, review, describe, verify, re-check, look again at, or report on "the changes" or on the state of the working tree, first enumerate every modified and untracked artifact the version-control system reports, categorized as source, configuration, generated, or build/deploy output, with timestamps for the outputs. Where the build or deployment writes into directories the version-control system ignores or excludes, those outputs are enumerated separately from the tree state; the ignore status is not evidence they are unchanged. A source-only enumeration is incomplete by definition.
+2. Derive and state the build implications: which outputs embed the changed source, whether those outputs have been regenerated since the source changed, and which deployment targets the outputs correspond to. An output older than the source it should embed is a finding; an output newer than the source is evidence of a build that includes the change (Rule 41).
+3. Treat the presence, absence, and recency of built artifacts as primary evidence about the change's state — compiled, deployed, or neither — and state that inference explicitly rather than assuming source edits imply those states.
+4. Where an artifact's provenance cannot be established from the tree, say so; assumed provenance is prohibited.
+5. The same completeness applies on re-checks: when asked to look again, re-enumerate rather than re-reading the previous list, because artifacts appear between passes.
+6. No exemption via the change appearing source-only: the determination that nothing else changed is produced by the enumeration, never assumed from the diff's size or the file list.
+
+**A review of "the changes" must not be delivered from a partial artifact set. Reporting a source diff as the change set while generated or built outputs are unreported is a protocol violation.**
+
+This rule extends Rule 13 (baseline verification) and Rule 41 (generated-value cycles) into a change-set enumeration duty, and feeds Rule 5.1 step 3, whose changed-line list cannot be correct while part of the change set is invisible. Satisfying any of those does not satisfy this rule.
+
+*Failure class: the review examines the source diff, misses that the deliverable was rebuilt and deployed — or was not — and reports a state the tree contradicts.*
+
+---
+
+## Rule 92 — Repair Paths Must Be Observable, Distinct, and Truthful
+
+An automatic repair — a substitution, fallback, clamp, skip, or degraded serving — is a decision the system made on the data's behalf. Every repair must leave a signal from which a later investigator can find and fix the root data: which broken state occurred, what was served instead, and under which identity the broken input can be located.
+
+The mandatory behavior:
+1. Every distinct broken state a repair path can receive gets its own label. States with different causes — a missing component, an out-of-range identity, an uninitialized entry, a wrong-phase value — are not merged into one message, even when the handling path is shared.
+2. Each signal records the identifying values of the broken state and of the served substitute — the input identity, the substitute identity, and a reason label — so the underlying data can be located from field reports alone.
+3. A message about a repair fires only when the repair took place, and reports the values that actually changed. An unconditional message on a branch that may not have repaired anything is a false record.
+4. Signals are bounded for repetition but guarantee coverage: the first occurrence of every distinct state is always emitted (per state, per execution — a run or a session), and repetition is limited per state to prevent floods. A limit that suppresses the first occurrence of a distinct state, or that narrows the state taxonomy, is a defect.
+5. Every call of an established logging, reporting, or diagnostics API matches the convention of the existing call sites for that API — the same argument form and identifiers — verified against those call sites before the call is added.
+6. Repairs on hot paths satisfy 1 through 4 as well; the bound is on repetition, not on observability.
+7. No exemption via the repair appearing cosmetic or the broken state appearing rare: rarity is a claim the signal itself must support.
+
+**A repair path must not be marked complete until its distinct states, its per-state signal, its recorded identities, and its bounding policy are stated. A repair that can occur unlabelled, merged, or misreported is a protocol violation.**
+
+This rule extends Rule 79 (every failure reason signalled) from checks to repairs, and Rule 0.58 ninety-first addendum (recording the gate's runtime verdict) from activation gates to repairs. Rule 19 addendum governs claims about fail-closed behavior; this rule governs the record the repair path must produce. Satisfying any of those does not satisfy this rule.
+
+*Failure class: repairs happen silently or under one merged label, field reports cannot identify the data to fix, and a message records a repair that never occurred — so the investigation chases its own log.*
+
+---
+
+## Rule 93 — Claims in Comments and Reports Are Evidence or Silence
+
+A sentence in a comment, a report, or a delivery message that asserts a fact about other code — what it covers, how many sites exist, which consumers are affected, how a path behaves — is a claim that inherits every verification duty of any other claim. Comments document load-bearing invariants and non-obvious constraints.
+
+The mandatory behavior:
+1. Every coverage, count, or impact statement in a comment or report is either backed by the same-task enumeration with its anchors (Rule 90) or omitted; a statement that cannot cite its verification is not written.
+2. Comments state invariants a future change could silently break — the constraint, the reason, and the site it binds. They do not state speculative lists of affected systems, histories of what was fixed, or narratives of the author's reasoning.
+3. When later evidence contradicts a comment or a report — a conflated set, a wrong label, a superseded count — correcting the claim is part of completing that task, not deferred maintenance.
+4. Delivery messages distinguish verified facts, inferences, and open questions, each marked as what it is. An inference stated as fact is a defect of the report.
+5. A claim about the code's behavior names the path that enforces it (Rule 79 item 3); if that path was not read, the claim is labelled unverified or removed (Rule 34).
+6. No exemption via prose being "just a comment" or a report being internal-only: every claim channel is bound by this rule, including review replies, status notes, and delivery messages.
+
+**A claim in a comment or report must not assert what the task's own verification does not support. Leaving a contradicted claim in place is a protocol violation.**
+
+This rule binds Rule 11's comment discipline, Rule 34's enforced-claim requirement, and Rule 0.59's fresh-read duty into one evidence rule for prose. Rule 15 makes unimplemented residuals defects; this rule makes unverified assertions defects. Satisfying any of those does not satisfy this rule.
+
+*Failure class: a banner comment lists consumers from memory and conflates distinct sets; a delivery report states coverage the search never established; the next reader treats the prose as evidence and the error compounds.*
 
 ---
 
@@ -3426,7 +3873,16 @@ Every software engineering task across all programming languages, frameworks, pl
    - *Infallible Cleanup & Concurrency Ordering:* Destructors, deallocators, and release routines must be unconditionally non-throwing and infallible; concurrent state access must use formal atomic synchronization with acquire/release memory semantics rather than volatile flags.
    - *Data vs. Code Separation & Canonical Sandboxing:* Untrusted input must never be interpolated directly into format strings, query interpreters, shell invocations, or path constructors; structured parameters, canonical path sandboxing, and immutable format templates are mandatory.
 
-7. **Universal Anti-Evasion & Scope Binding Clause:** The axioms above govern universal algorithmic, structural, and systems paradigms. The absence of a specific framework, programming language, operating system, hardware device, API name, or code example from this document never permits bypassing, relaxing, or narrowing the scope of any axiom. Every requirement applies unconditionally to the entire functional and architectural class it defines.
+7. **Axiom VII: Guard, Refusal, and Boundary Integrity**
+   - *Refusal Contract:* A refusal, guard, or skipped operation must satisfy the consuming side's contract on that path; an artifact a consumer uses unconditionally must be produced validly, or the operation must be relocated (Rule 75).
+   - *Guard Dominance and Placement:* A validation must dominate every read of the value it validates and precede the first read, including reads performed inside constructors, factories, wrappers, and callees (Rules 76, 81).
+   - *Region Membership:* Address-, index-, handle-, and identifier-shaped values must be tested for the property the access requires, against the region's live base and extent, in arithmetic that cannot wrap, and revalidated after any relocation or resize (Rule 77).
+   - *Predicate Purity:* Predicates, guards, and preconditions on live paths must not act; corrective action belongs where its lifecycle consequences are designed (Rule 78).
+   - *Signal and Claim Honesty:* Every failure reason of a check must be signalled, and every behavioural claim must name the path that enforces it over the domain it asserts (Rule 79).
+   - *Mechanism-Level Coverage:* Protection is enumerated by the primitive operation, never by the wrapper through which the defect was first observed (Rule 80).
+   - *Own-Guard Audit:* Every guard, refusal, predicate, bounds test, and fallback the change adds is itself the subject of the completion audit, answered in writing (Rule 83).
+   - *Single-Source Bound Form:* Every bound a protection references must be named for its domain and declared in a form usable in every context that references it (Rule 82).
+8. **Universal Anti-Evasion & Scope Binding Clause:** The axioms above govern universal algorithmic, structural, and systems paradigms. The absence of a specific framework, programming language, operating system, hardware device, API name, or code example from this document never permits bypassing, relaxing, or narrowing the scope of any axiom. Every requirement applies unconditionally to the entire functional and architectural class it defines.
 
 ---
 
@@ -3459,6 +3915,8 @@ If full compliance with a rule is genuinely infeasible in the current session, s
 2. **Zero-finding re-pass.** After the last change, a full re-pass of the audit must produce zero findings. If the re-pass finds anything, the cycle repeats: fix, then re-pass, until a full pass produces zero findings. "Zero findings" is the only valid stopping condition. "I have checked enough" is not a stopping condition. A full re-pass means the exhaustion standard of the Rule 5.1 second addendum — every applicable rule applied to every artifact — not a shallow rescan; the re-pass must be written in the response, and a re-pass that is not written is indistinguishable from one never performed.
 
 The ledger and the zero-finding re-pass are the proof of completion. A completion response that lacks either is self-evidently incomplete regardless of what the agent claims. The completion heartbeat must appear only after both are written. The ledger is the completion-side counterpart of Rule 0.58's pre-write enumeration: Rule 0.58 enumerates before writing, this block verifies after writing, and the zero-finding re-pass closes the gap between them.
+
+**New control flow is a deliverable of its own.** Every guard, refusal, fallback, skip path, and bounds test the change adds must appear in the completion report as a row - the branch, the artifact or operation it protects, the consuming side's contract on that branch, the signal emitted, and the Rule 83 answers - and the zero-finding re-pass must include those rows. A report that lists the files changed but not the control flow added has not reported the change: the control flow is the part the next reader will trust, and it is the part that has never been exercised by the code it replaced. An unlisted guard is an unaudited guard, and an unaudited guard is where the classes of Rules 75 to 82 survive.
 
 **Completion attestation heartbeat.** Every response that completes a coding, design, review, bug-hunting, or engineering task — any task that produced code changes, a review report, or a deliverable the user asked for — must contain the exact words **`Task completion gate: Rule 5.1 executed.`** The phrase must appear in the response body, not only in internal reasoning. A completion response without this phrase is invalid and must not be sent. The phrase is mandatory even when the response also contains a regression-gate report — it is the attestation that the report exists. The phrase is the structural equivalent of the task-start heartbeat: it proves the closing gate was reached, not that the agent "remembers completing." A response that summarizes delivered work or announces a successful build but lacks this phrase has self-reported as incomplete — the agent has acknowledged finishing work but has not attested to executing the gate, confirming the gate was skipped. The user seeing this phrase has received proof that Rule 5.1 ran. The user not seeing it has received proof that it did not.
 
