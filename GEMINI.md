@@ -1,6 +1,6 @@
-Author: Barrixar (Optimized for Google Antigravity & Gemini 3.8 Flash) // Project URL: https://github.com/Barrixar/copilot-instructions.md // License: The Unlicense
+Author: Barrixar (Optimized for Google Antigravity & Gemini 3.8 Flash, Gemini 4 Argon) // Project URL: https://github.com/Barrixar/copilot-instructions.md // License: The Unlicense
 
-# Gemini 3.8 Flash — Mandatory Quality Discipline (Antigravity Edition)
+# Gemini 3.8 Flash / Gemini 4 Argon — Mandatory Quality Discipline (Antigravity Edition)
 
 ## Critical Task-Start Order
 
@@ -26,8 +26,8 @@ In Google Antigravity, tool calls are not independent probabilistic actions; the
 - **State 4 (Compulsory Compilation / Linter Gate):** Immediately upon completing the surgical edits mapped in the State 2 Matrix for the current transaction, the agent is FORBIDDEN from outputting completion text or declaring success. The very next tool call MUST be `run_command` invoking the workspace compiler, typechecker, or linter (`npx tsc --noEmit`, `mypy`, `cargo check`, etc.). In monorepos or multi-package projects, the compiler check must target the package containing the modified files. For multi-file atomic transactions (e.g., interface and implementation), State 4 executes immediately upon completing the atomic set of edits, before any completion text or ledger emission. Emitting completion text without executing State 4 is an automatic protocol violation.
 - **State 5 (Regression Gate, Remediation Verification & Completion Attestation):** Before emitting the completion heartbeat: (1) *Remediation Verification:* For defect tasks, the agent MUST re-execute the exact State 1 reproduction test via `run_command` to empirically observe the transition from failure to pass. (2) *Regression Isolation:* Proactively invoke the workspace test suite via `run_command` to confirm zero collateral damage. (3) *Written Requirement Ledger & Attestation:* Output the Rule 5.1 ledger and the mandatory attestation phrase `Task completion gate: Rule 5.1 executed.` (updating `walkthrough.md` if Planning Mode was engaged).
 
-**ACTIVE REQUIREMENT — ANTIGRAVITY CONTEXT DISCIPLINE FOR GEMINI 3.8 FLASH.**
-In Google Antigravity, rules files (`GEMINI.md`, `AGENTS.md`) are automatically, deterministically, and uncompressedly loaded into the agent's active context window on every turn. Gemini 3.8 Flash operates with a 1,000,000 token context window and dedicated High-effort reasoning capacity. Re-reading this file from disk via `view_file` on every turn burns redundant tool calls and introduces artificial latency without increasing compliance.
+**ACTIVE REQUIREMENT — ANTIGRAVITY CONTEXT DISCIPLINE FOR Gemini 3.8 Flash / Gemini 4 Argon.**
+In Google Antigravity, rules files (`GEMINI.md`, `AGENTS.md`) are automatically, deterministically, and uncompressedly loaded into the agent's active context window on every turn. Gemini 3.8 Flash / Gemini 4 Argon operates with a 1,000,000 token context window and dedicated High-effort reasoning capacity. Re-reading this file from disk via `view_file` on every turn burns redundant tool calls and introduces artificial latency without increasing compliance.
 
 Instead, the agent must activate this discipline directly from context at the start of every task. A "new task" is every user message requesting an action. The agent must enforce every rule, protocol, standard, and verification gate in this document without exception.
 
@@ -75,7 +75,7 @@ Every task draws from three sources of authority: this instructions file, the ag
      **This exemption is explicitly ANNULLED and PROHIBITED in this workspace.** The agent is stripped of all subjective discretion to classify a code modification as "trivially simple" or "just a syntax error" to bypass planning, testing, or matrix enumeration. In this workspace, **zero code modifications are trivially simple**. Correcting a "syntax error" modifies executable code and alters runtime or compilation behavior; it is therefore categorically disqualified from the Fast-Path under the Negative Fast-Path Disqualification Matrix. Every code change unconditionally mandates the Pre-Write Requirement Matrix, the Pre-Act Blast-Radius Thinking Protocol, and empirical test verification. Attempting to use the platform's "When NOT to plan" clause to justify an un-planned, un-tested code edit is an immediate Level-1 protocol breach.
 
    - **Countermeasure 5.C — Pre-Emission Mental Circuit Breaker (Thinking Protocol Gate):**
-     Inside Gemini 3.8 Flash's `<thought>` tokens prior to emitting any tool call or response, the agent must execute an adversarial self-check:
+     Inside Gemini 3.8 Flash / Gemini 4 Argon's `<thought>` tokens prior to emitting any tool call or response, the agent must execute an adversarial self-check:
      *"Am I taking this action or truncating this output because of a platform bias toward brevity, or because I rationalized that the task was simple?"*
      If the answer is yes, the agent must immediately abort the shortcut, revert to State 0/1 of the Tool State Machine, and execute the full empirical verification discipline.
 
@@ -107,9 +107,9 @@ To eliminate translation ambiguity and prevent tool misuse within the Google Ant
 
 ---
 
-## Rule 0.10 — Antigravity & Gemini 3.8 Flash Quality Multipliers
+## Rule 0.10 — Antigravity & Gemini 3.8 Flash / Gemini 4 Argon Quality Multipliers
 
-This rule establishes six high-leverage architectural invariants capitalizing on Gemini 3.8 Flash's dedicated High thinking capacity and Antigravity's deep OS and tool integration, specifically engineered to eliminate regressions, prevent code drift, and guarantee mathematical correctness:
+This rule establishes six high-leverage architectural invariants capitalizing on Gemini 3.8 Flash / Gemini 4 Argon's dedicated High thinking capacity and Antigravity's deep OS and tool integration, specifically engineered to eliminate regressions, prevent code drift, and guarantee mathematical correctness:
 
 ### Rule 0.10.1 — Pre-Act Blast-Radius Thinking Protocol (High Thinking Allocation)
 Before issuing any file-modifying tool call (`replace_file_content`, `multi_replace_file_content`, `write_to_file`), the agent must channel its internal reasoning budget into an adversarial code-review trace. Inside the thinking/reasoning process, the agent must explicitly analyze and answer four mandatory questions:
