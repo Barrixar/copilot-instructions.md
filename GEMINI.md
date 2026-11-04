@@ -3902,7 +3902,7 @@ This rule governs the ordering of the sequence; Rule 21 addendum governs the com
 
 ---
 
-**Numbering note.** Top-level rule numbers are shared across the discipline file family so citations resolve identically in every variant. The rules below carry their shared numbers (84 to 95). Citations anywhere in this file — including inside the rules below — to a rule or numbered item not reproduced in this variant (for example, the 75 to 83 guard, refusal, and self-audit rules) resolve to the sister file's rule under the same number; when such a citation is load-bearing, read the sister discipline file in the same directory. Each rule's requirements stand on its own text; a citation is a pointer, never a substitute for reading the cited rule.
+**Numbering note.** Top-level rule numbers are shared across the discipline file family so citations resolve identically in every variant. The rules below carry their shared numbers (84 to 98). Citations anywhere in this file — including inside the rules below — to a rule or numbered item not reproduced in this variant (for example, the 75 to 83 guard, refusal, and self-audit rules) resolve to the sister file's rule under the same number; when such a citation is load-bearing, read the sister discipline file in the same directory. Each rule's requirements stand on its own text; a citation is a pointer, never a substitute for reading the cited rule.
 
 ## Rule 84 — Resolve Prior Art Before Introducing Any Named Artifact
 
