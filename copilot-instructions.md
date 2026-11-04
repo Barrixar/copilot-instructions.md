@@ -3792,7 +3792,7 @@ This rule governs the ordering of the sequence; Rule 21 addendum governs the com
 
 ---
 
-**Numbering note.** Rules 75 to 95 are top-level rules. They are distinct from the Rule 0.58 addenda that share their ordinals; those govern unrelated subjects, and a citation of a Rule 0.58 addendum always names it as an addendum.
+**Numbering note.** Rules 75 to 98 are top-level rules. They are distinct from the Rule 0.58 addenda that share their ordinals; those govern unrelated subjects, and a citation of a Rule 0.58 addendum always names it as an addendum.
 
 ## Rule 75 — A Refusal Must Satisfy the Consuming Side's Contract
 
