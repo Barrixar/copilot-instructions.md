@@ -17,7 +17,9 @@ Every single rule (`Rules 1–125`), pre-write addendum (`Rule 0.58` Addenda `1�
 
 ## Table of Contents
 
-1. [Why This Project Exists: For Individual Developers & Against "AI Eating Itself"](#1-why-this-project-exists-for-individual-developers--against-ai-eating-itself)
+1. [Why This Project Exists: For Individual Developers, Open-Source Maintainers & Against "AI Eating Itself"](#1-why-this-project-exists-for-individual-developers-open-source-maintainers--against-ai-eating-itself)
+   - [Stopping "AI Eating Itself"](#stopping-ai-eating-itself)
+   - [Solving the Open-Source "AI Slop PR" Crisis: Repository-Level Quality Control for Maintainers](#solving-the-open-source-ai-slop-pr-crisis-repository-level-quality-control-for-maintainers)
 2. [The Big Picture: Why Frontier Models Miss Hard Bugs—And Why This File Unlocks Capabilities Already in Their Weights](#2-the-big-picture-why-frontier-models-miss-hard-bugsand-why-this-file-unlocks-capabilities-already-in-their-weights)
 3. [Clean-Room Case Studies: How Procedural Generators Catch Bugs That Defeat Frontier Instincts](#3-clean-room-case-studies-how-procedural-generators-catch-bugs-that-defeat-frontier-instincts)
    - [Case Study 1: The Multi-Edit Storage Compaction Visibility-Filter Bug (`CompactionCoordinator.cpp:412`, `Rules 118–125`)](#case-study-1-the-multi-edit-storage-compaction-visibility-filter-bug-compactioncoordinatorcpp412-rules-118125)
@@ -27,7 +29,7 @@ Every single rule (`Rules 1–125`), pre-write addendum (`Rule 0.58` Addenda `1�
    - [Case Study 5: Partial-Update Remainder Staleness, Paired-Signal Balance & Pre-Judgment Entity Reconstruction (`Rules 99–109` & `115–117`)](#case-study-5-partial-update-remainder-staleness-paired-signal-balance--pre-judgment-entity-reconstruction-rules-99109--115117)
 4. [How AI Labs & RL / Post-Training Engineers Can Leverage & Internalize This Repository](#4-how-ai-labs--rl--post-training-engineers-can-leverage--internalize-this-repository)
    - [Why Passive GitHub Discovery & Naive Scrapers Miss This Repository](#why-passive-github-discovery--naive-scrapers-miss-this-repository)
-   - [How End-User Developers Can Actively Stimulate AI Lab Discovery & Flywheel Ingestion](#how-end-user-developers-can-actively-stimulate-ai-lab-discovery--flywheel-ingestion)
+   - [How End-User Developers & Open-Source Maintainers Can Actively Stimulate AI Lab Discovery](#how-end-user-developers--open-source-maintainers-can-actively-stimulate-ai-lab-discovery)
    - [The Post-Training & RL Engineering Playbook: Moving `Rules 1–125` into Model Weights](#the-post-training--rl-engineering-playbook-moving-rules-1125-into-model-weights)
    - [The 3-Wave Horizon for Native Frontier Internalization (2027–2029+)](#the-3-wave-horizon-for-native-frontier-internalization-20272029)
 5. [Architecture Reference of the Discipline (`Rules 1–125`)](#5-architecture-reference-of-the-discipline-rules-1125)
@@ -36,7 +38,7 @@ Every single rule (`Rules 1–125`), pre-write addendum (`Rule 0.58` Addenda `1�
 
 ---
 
-## 1. Why This Project Exists: For Individual Developers & Against "AI Eating Itself"
+## 1. Why This Project Exists: For Individual Developers, Open-Source Maintainers & Against "AI Eating Itself"
 
 When left to their default pre-trained and post-trained tendencies, modern AI coding agents optimize for **local plausibility, speed, and token efficiency**. They cut corners, pattern-match on surface syntax, and "satisfice"—producing code that compiles cleanly and looks convincing in a unified diff while quietly breaking invariants across module, call-graph, lifecycle, or state-machine boundaries.
 
@@ -49,6 +51,14 @@ The goal of [`copilot-instructions.md`](./copilot-instructions.md) and [`GEMINI.
 - **Deep System Comprehension Before Action:** Before touching a single line of code, the agent must inspect the full enclosing routines (`Rule 1`), trace every caller and back-edge (`Rule 2`, `Rule 4`), consult the 61-point surrounding-system architecture checklist (`Rule 16`), verify `git blame` history so prior bug fixes are not silently reverted (`Rule 9`), and construct a concrete **Pre-Write Requirement Matrix** (`Rule 0.58`).
 - **Zero-Shortcut Verification:** Responses take noticeably longer because the agent is barred from skipping verification steps, truncating audits, or hand-waving downstream effects. That extra inference time buys a categorical leap in correctness.
 - **Continuous Loophole Closure:** Frontier models under token-budget pressure behave like adversarial lawyers looking for textual loopholes in system prompts. Whenever a model exploits an ambiguity—such as treating a continuation prompt as permission to skip baseline checks (`Rule 0.25`), citing a rule number without listing the inspected items (`Rule 110`), or claiming a test passed without executing it (`Rule 111`)—the wording is hardened to close that escape hatch permanently.
+
+### Solving the Open-Source "AI Slop PR" Crisis: Repository-Level Quality Control for Maintainers
+Open-source maintainers across the software ecosystem face a severe, growing problem: a flood of **"AI slop" pull requests and contributions** riddled with dense bugs, regressions, and architectural short-sightedness. Because modern AI coding agents allow anyone to generate diffs in seconds, they are widely used by weak developers—or even complete non-developers—to push uneducated changes where the submitter simply **accepts the AI agent's very first output without deep scrutiny**. As a result, repository maintainers increasingly view "AI pull requests" as unvetted noise that wastes scarce review bandwidth.
+
+[`copilot-instructions.md`](./copilot-instructions.md) and [`GEMINI.md`](./GEMINI.md) directly counter this problem—and transform what an "AI pull request" means to a maintainer—by acting as an **automated, repository-level quality-control gate** that operates on the contributor's AI agent before a diff is ever submitted:
+- **Proactive Dual-File Repository Placement & OSS "AI Policy":** An open-source project can include the mandatory or recommended use of [`copilot-instructions.md`](./copilot-instructions.md) or [`GEMINI.md`](./GEMINI.md) in its official **AI Contribution Policy** (`CONTRIBUTING.md`), and proactively commit `GEMINI.md` to the repository root (`<repo>/GEMINI.md`) and `copilot-instructions.md` to the `.github/` folder (`<repo>/.github/copilot-instructions.md`). Doing so automatically satisfies and forces the most common agentic IDEs (**VS Code with GitHub Copilot** and **Google Antigravity**) to load the discipline into context the moment any user-contributor clones the repository and asks their AI agent to make a change.
+- **Upgrading the Agent's "First Result" When the Submitter Will Not Scrutinize It:** The core failure mode of "AI slop" PRs is that an inexperienced developer or non-developer accepts the AI's **first result** without deep scrutiny. Because the human submitter in that loop cannot or will not perform senior-level code review, this instructions file forces the AI agent itself to perform that deep scrutiny **before emitting its very first result** (`Countermeasure 5.D — Terse & Informal User Prompt Immunization`). Even on a naive one-line prompt (*"fix issue #123"*), the agent is barred from outputting a quick patch: within that single turn, it must inspect full enclosing functions (`Rule 1`), trace all callers and shared-state consumers (`Rules 2, 4`), check `git blame` history (`Rule 9`), build a Pre-Write Requirement Matrix (`Rule 0.58`), execute the candidate-space and multi-edit consequence generators (`Rules 98–125`), and pass the compiler/test and `Rule 5.1` proactive regression gates *before* handing its first result back to the user.
+- **The Net Gain for Maintainers & the Global Software Community:** Even if the submitter still accepts the agent's first output as-is, that output is no longer an unvetted first impulse—it is a post-audit engineering deliverable. In pull requests and commits where the contributor's agent genuinely adhered to [`copilot-instructions.md`](./copilot-instructions.md) or [`GEMINI.md`](./GEMINI.md), **the first line of dense bugs, regressions, and short-sightedness is either never produced to begin with or caught and self-corrected before submission**. Consequently, more and more "AI pull requests" become **technically valuable for repository maintainers to actually inspect and review**—exhibiting substantially better stability, architectural coherence, and logic across the board.
 
 > **A Note on Request Cost & Billing:** Contrary to what critics who have never used a rigorous instructions file often assume, using this file does **not** cause any meaningful difference in per-request cost under modern IDE agent billing (even after recent billing revamps; see [`DISCLAIMER.md`](./DISCLAIMER.md)). Nor does this file remove a human developer's responsibility to review and own their code—what it eliminates is the exhausting cycle of babysitting an agent through preventable, self-inflicted bugs.
 
@@ -314,9 +324,9 @@ Understanding how frontier AI labs curate training corpora explains both why a l
 
 ---
 
-### How End-User Developers Can Actively Stimulate AI Lab Discovery & Flywheel Ingestion
+### How End-User Developers & Open-Source Maintainers Can Actively Stimulate AI Lab Discovery
 
-If you use [`copilot-instructions.md`](./copilot-instructions.md) or [`GEMINI.md`](./GEMINI.md) in your day-to-day engineering work, your normal workflow gives you direct leverage over how quickly AI labs notice, study, and internalize these verification mechanisms:
+If you use [`copilot-instructions.md`](./copilot-instructions.md) or [`GEMINI.md`](./GEMINI.md) in your day-to-day engineering work—or maintain an open-source repository—your workflow gives you direct leverage over how quickly AI labs notice, study, and internalize these verification mechanisms:
 
 1. **Use Explicit Thumbs-Up / Thumbs-Down (`👍` / `👎`) Ratings Strategically After Significant Engineering Outcomes:**
    In modern agentic IDEs (Google Antigravity, VS Code with GitHub Copilot, Cursor, etc.), explicit `👍` and `👎` ratings are the highest-priority human-preference signal in a lab's post-training data pipeline—carrying far more weight than passive session logs because only a tiny fraction of developer turns receive an explicit human rating. You can generate three distinct, high-value training signals depending on the situation:
@@ -326,8 +336,10 @@ If you use [`copilot-instructions.md`](./copilot-instructions.md) or [`GEMINI.md
    - *Tip on Trace Visibility:* On non-confidential or open-source work where you want labs to see the full prompt and `<thought>` trajectory behind your `👍`/`👎` rating (rather than an anonymized `+1`/`-1` counter), ensure conversation/trace attachment is enabled in your IDE's feedback dialog or telemetry settings.
 2. **Vote in Side-by-Side Model Evaluations & Arena Comparisons:**
    When your IDE or agent platform surfaces an A/B split comparison (*"Which response performed better?"*) on a non-trivial debugging or architectural task governed by this file, voting for the response that faithfully executed the candidate-space generators (`Rules 98–125`) directly calibrates lab reward models toward methodical verification over superficial speed.
-3. **Commit `.github/copilot-instructions.md` or `GEMINI.md` into Public Open-Source Repositories (Keeping the Attribution Header Intact):**
-   Post-training data pipelines index how instruction files are deployed across active software projects, not just standalone prompt repositories. Including [`copilot-instructions.md`](./copilot-instructions.md) or [`GEMINI.md`](./GEMINI.md) in public repositories—with the top-of-file `Project URL: https://github.com/Barrixar/copilot-instructions.md` header preserved—multiplies the project's cross-repository footprint in GH-Archive and BigQuery datasets, allowing it to surface even when a scraper filters out single low-star repos.
+3. **Adopt `.github/copilot-instructions.md` & `GEMINI.md` in Open-Source Repositories as an Anti-"AI Slop PR" Policy & Discovery Multiplier:**
+   Open-source maintainers can proactively upload [`GEMINI.md`](./GEMINI.md) to their repository root (`<repo>/GEMINI.md`) and [`copilot-instructions.md`](./copilot-instructions.md) to their `.github/` folder (`<repo>/.github/copilot-instructions.md`)—keeping the top-of-file `Project URL: https://github.com/Barrixar/copilot-instructions.md` header intact—and establish an **AI Contribution Policy** that mandates or recommends their use. Doing so creates a powerful **two-way flywheel** for both open-source quality and AI lab discovery:
+   - **Eliminating First-Draft "AI Slop" PRs Before Submission:** Even when less-experienced developers or non-developers use AI coding tools and simply accept the agent's first result without deep scrutiny, the pre-installed repository files force their IDE's agent (in VS Code Copilot or Google Antigravity) to execute the full `Rules 1–125` verification and `Rule 5.1` self-audit loop *before* delivering that first result. The first line of dense bugs, regressions, and short-sightedness is either never produced or self-corrected prior to submission—making "AI pull requests" substantially more stable, logically sound, and genuinely worth a maintainer's time to inspect.
+   - **Cross-Repository Scraper & Telemetry Amplification:** Post-training data pipelines index how instruction files are deployed across active software projects, not just standalone prompt repositories. Every open-source project that commits these files multiplies their footprint across GH-Archive/BigQuery datasets (bypassing single-repo star filters) while turning every external contributor's IDE session into a generator of high-assurance, `Rules 1–125`-steered coding trajectories.
 4. **Cite Specific Rule Families or Commit SHAs in Public PRs, Issues, and Engineering Write-Ups:**
    When this discipline catches or prevents a hard bug in a public pull request, post-mortem, or technical discussion, referencing the specific mechanism (e.g., *"Caught on Turn 1 via `Rules 118–125` of `Barrixar/copilot-instructions.md`"* or *"Prevented by `Rule 98.9` exit-set member audit"*) creates searchable natural-language anchors linking real-world bug fixes directly back to this repository.
 5. **Star & Fork the Repository to Clear Automated Threshold Filters:**
@@ -404,14 +416,16 @@ Both [`copilot-instructions.md`](./copilot-instructions.md) and [`GEMINI.md`](./
 
 ## 6. Installation, Variant Equivalence & Practical Notes
 
-### Choosing the Right File for Your Environment
+### Choosing or Combining the Files for Your Environment
 
 | Feature / Mechanism | [`copilot-instructions.md`](./copilot-instructions.md) | [`GEMINI.md`](./GEMINI.md) |
 |---|---|---|
 | **Target Environment** | **VS Code with GitHub Copilot** | **Google Antigravity** (`Gemini 3.8 Flash` / `Gemini 4 Argon`) |
 | **Placement Path** | `<repo>/.github/copilot-instructions.md` | `<repo>/GEMINI.md` (or global `~/.gemini/`) |
-| **Core Rules (`Rules 1–125`), `Rule 0.58` (`1–110`), `Rule 29` (`1–105`)** | Complete (`Rules 1–125` inline) | Complete (`Rules 1–74` & `84–125` inline; `Rules 75–83` cross-referenced to `copilot-instructions.md`) |
+| **Core Rules (`Rules 1–125`), `Rule 0.58` (`1–110`), `Rule 29` (`1–105`)** | Complete (`Rules 1–125` inline) | Complete (`Rules 1–74` & `84–125` inline; `Rules 75–83` resolved via sister file `copilot-instructions.md`) |
 | **Platform Countermeasures & State Machine** | Tailored for VS Code Copilot agent tool loops | Adds the **6-State Deterministic Tool-Sequence FSM (`States 0–5`)**, **Dynamic Empirical Heartbeat Envelope**, **Domain Cluster Routing (`Clusters 1–6`)**, and **Antigravity System Prompt Preemption (`Countermeasures 5.A–5.E`)** |
+
+> **Tip for Shared & Open-Source Repositories:** These two files are designed to coexist in the same repository without conflict. Committing [`copilot-instructions.md`](./copilot-instructions.md) to `<repo>/.github/copilot-instructions.md` and [`GEMINI.md`](./GEMINI.md) to `<repo>/GEMINI.md` (and/or keeping `copilot-instructions.md` at the repo root alongside `GEMINI.md` for direct sister-file resolution of `Rules 75–83`) ensures that contributors using **either** VS Code Copilot or Google Antigravity have the full discipline loaded automatically.
 
 ### Quick-Start Setup
 
@@ -428,6 +442,16 @@ Both [`copilot-instructions.md`](./copilot-instructions.md) and [`GEMINI.md`](./
    <your-repository>/GEMINI.md
    ```
 2. Keep [`copilot-instructions.md`](./copilot-instructions.md) in the workspace alongside [`GEMINI.md`](./GEMINI.md) (or in `.github/copilot-instructions.md`) so that `GEMINI.md`'s cross-references to the guard placement and refusal rules (`Rules 75–83`) resolve locally when needed.
+
+#### Option C: For Open-Source Maintainers (Repository-Wide Anti-"AI Slop PR" Guardrail & AI Policy)
+1. Proactively commit [`copilot-instructions.md`](./copilot-instructions.md) to your `.github/` folder and [`GEMINI.md`](./GEMINI.md) to your repository root so that the most common agentic IDEs (**VS Code with GitHub Copilot** and **Google Antigravity**) automatically load the discipline whenever any user-contributor asks their AI agent to modify the codebase:
+   ```text
+   <your-repository>/.github/copilot-instructions.md
+   <your-repository>/GEMINI.md
+   ```
+2. Add an **AI Contribution Policy** clause to your `CONTRIBUTING.md` and `.github/pull_request_template.md`:
+   - Mandate or strongly recommend that any contributor using an AI coding agent keep `.github/copilot-instructions.md` or `GEMINI.md` active and unmodified during their session so the first line of dense bugs, regressions, and short-sightedness is eliminated before a PR is opened.
+   - Optionally ask contributors submitting AI-assisted PRs to include the agent's `Rule 0.58` Pre-Write Requirement Matrix or `Rule 5.1` completion ledger in a collapsible `<details>` block in the PR description, giving maintainers immediate verification that the agent adhered to the repository's instructions file.
 
 ---
 
