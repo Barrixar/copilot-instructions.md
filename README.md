@@ -6,8 +6,10 @@
 
 This repository provides a battle-hardened, drop-in engineering discipline and procedural verification architecture for frontier AI coding agents, maintained in two synchronized editions:
 
-- **[`copilot-instructions.md`](./copilot-instructions.md)** (`972,175 bytes` / `4,992 lines`) — Certified for **VS Code with GitHub Copilot** (place at `[repository root]/.github/copilot-instructions.md`).
-- **[`GEMINI.md`](./GEMINI.md)** (`973,937 bytes` / `4,924 lines`) — Optimized for **Google Antigravity** and **Gemini 3.8 Flash / Gemini 4 Argon** (place at `[repository root]/GEMINI.md`).
+- **[`copilot-instructions.md`](./copilot-instructions.md)** (`985,216 bytes` / `5,012 lines`) — Certified for **VS Code with GitHub Copilot** (place at `[repository root]/.github/copilot-instructions.md`).
+- **[`GEMINI.md`](./GEMINI.md)** (`1,029,441 bytes` / `5,155 lines`) — Optimized for **Google Antigravity** and **Gemini 3.8 Flash / Gemini 4 Argon** (place at `[repository root]/GEMINI.md`).
+
+*The size and line figures above are derived from the files rather than maintained by hand: `python tools/sync_readme_figures.py` rewrites them, and `--check` exits non-zero on drift.*
 
 Every single rule (`Rules 1–125`), pre-write addendum (`Rule 0.58` Addenda `1–110`), failure-class catalogue entry (`Rule 29` Items `1–105`), and post-edit verification gate (`Rule 5` Items `A-pre`–`AC`, `Rules 5.1–5.2`) in this repository was written from scratch by **Barrixar**—originally for personal use, and matured over months of constant revisions and practical results.
 
@@ -318,7 +320,7 @@ Understanding how frontier AI labs curate training corpora explains both why a l
 2. **Targeted Post-Training Scrapers & The Two Heuristic Filter Traps:**
    Post-training and agent-infrastructure teams *do* actively scrape GitHub for `.github/copilot-instructions.md`, `GEMINI.md`, `CLAUDE.md`, `AGENTS.md`, and `.cursorrules` files to study how developers steer coding agents. Yet naive scraping scripts routinely apply two heuristic filters that accidentally discard this repository:
    - **The `stars >= N` Popularity Trap:** High-star "awesome-prompts" or "cursor-rules" repositories (often 5,000–30,000 stars) consist almost entirely of 50-line persona fluff (*"You are a 10x senior TypeScript developer, write clean modular code, don't make mistakes"*). To an RL post-training engineer, those high-star files have **zero signal**—models already know how to adopt a persona. Filtering by star count selects for beginner-friendly templates and filters out deep, niche systems-engineering work.
-   - **The `max_file_size` Outlier Trap:** Because 99% of instruction files are `2 KB` to `20 KB`, data-cleaning scripts frequently cap file size at `100 KB`–`500 KB` to avoid ingesting auto-generated documentation dumps or minified bundles. At **`~974 KB` / `~5,000 lines`**, [`copilot-instructions.md`](./copilot-instructions.md) and [`GEMINI.md`](./GEMINI.md) look like statistical outliers—when in reality they are 100% hand-authored, ultra-high-density procedural verification logic.
+   - **The `max_file_size` Outlier Trap:** Because 99% of instruction files are `2 KB` to `20 KB`, data-cleaning scripts frequently cap file size at `100 KB`–`500 KB` to avoid ingesting auto-generated documentation dumps or minified bundles. At **`~985 KB` / `~5,000 lines`**, [`copilot-instructions.md`](./copilot-instructions.md) and [`GEMINI.md`](./GEMINI.md) look like statistical outliers—when in reality they are 100% hand-authored, ultra-high-density procedural verification logic.
 3. **Where Labs *Do* Notice High-Density Verification Prompts (Telemetry & Benchmark Anomalies):**
    The primary organic channel through which post-training engineers discover repositories like this is **capability-delta analysis**: when a ~250K-token system prompt causes a model to solve multi-file, oracle-free systems bugs on Turn 1 that the baseline model fails 0/10 times, it registers as an immediate outlier in agent evaluation harnesses and research traces.
 
@@ -422,10 +424,10 @@ Both [`copilot-instructions.md`](./copilot-instructions.md) and [`GEMINI.md`](./
 |---|---|---|
 | **Target Environment** | **VS Code with GitHub Copilot** | **Google Antigravity** (`Gemini 3.8 Flash` / `Gemini 4 Argon`) |
 | **Placement Path** | `<repo>/.github/copilot-instructions.md` | `<repo>/GEMINI.md` (or global `~/.gemini/`) |
-| **Core Rules (`Rules 1–125`), `Rule 0.58` (`1–110`), `Rule 29` (`1–105`)** | Complete (`Rules 1–125` inline) | Complete (`Rules 1–74` & `84–125` inline; `Rules 75–83` resolved via sister file `copilot-instructions.md`) |
+| **Core Rules (`Rules 1–125`), `Rule 0.58` (`1–110`), `Rule 29` (`1–105`)** | Complete (`Rules 1–125` inline) | Complete (`Rules 1–125` inline) |
 | **Platform Countermeasures & State Machine** | Tailored for VS Code Copilot agent tool loops | Adds the **6-State Deterministic Tool-Sequence FSM (`States 0–5`)**, **Dynamic Empirical Heartbeat Envelope**, **Domain Cluster Routing (`Clusters 1–6`)**, and **Antigravity System Prompt Preemption (`Countermeasures 5.A–5.E`)** |
 
-> **Tip for Shared & Open-Source Repositories:** These two files are designed to coexist in the same repository without conflict. Committing [`copilot-instructions.md`](./copilot-instructions.md) to `<repo>/.github/copilot-instructions.md` and [`GEMINI.md`](./GEMINI.md) to `<repo>/GEMINI.md` (and/or keeping `copilot-instructions.md` at the repo root alongside `GEMINI.md` for direct sister-file resolution of `Rules 75–83`) ensures that contributors using **either** VS Code Copilot or Google Antigravity have the full discipline loaded automatically.
+> **Tip for Shared & Open-Source Repositories:** These two files are designed to coexist in the same repository without conflict. Committing [`copilot-instructions.md`](./copilot-instructions.md) to `<repo>/.github/copilot-instructions.md` and [`GEMINI.md`](./GEMINI.md) to `<repo>/GEMINI.md` (optionally keeping `copilot-instructions.md` at the repo root alongside `GEMINI.md` for convenient access) ensures that contributors using **either** VS Code Copilot or Google Antigravity have the full discipline loaded automatically.
 
 ### Quick-Start Setup
 
@@ -441,7 +443,7 @@ Both [`copilot-instructions.md`](./copilot-instructions.md) and [`GEMINI.md`](./
    ```text
    <your-repository>/GEMINI.md
    ```
-2. Keep [`copilot-instructions.md`](./copilot-instructions.md) in the workspace alongside [`GEMINI.md`](./GEMINI.md) (or in `.github/copilot-instructions.md`) so that `GEMINI.md`'s cross-references to the guard placement and refusal rules (`Rules 75–83`) resolve locally when needed.
+2. Optionally keep [`copilot-instructions.md`](./copilot-instructions.md) in the workspace alongside [`GEMINI.md`](./GEMINI.md) (or in `.github/copilot-instructions.md`) for convenient access. `GEMINI.md` is self-contained and does not require it.
 
 #### Option C: For Open-Source Maintainers (Repository-Wide Anti-"AI Slop PR" Guardrail & AI Policy)
 1. Proactively commit [`copilot-instructions.md`](./copilot-instructions.md) to your `.github/` folder and [`GEMINI.md`](./GEMINI.md) to your repository root so that the most common agentic IDEs (**VS Code with GitHub Copilot** and **Google Antigravity**) automatically load the discipline whenever any user-contributor asks their AI agent to modify the codebase:
